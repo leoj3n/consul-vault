@@ -253,7 +253,9 @@ init() {
         _copy_key ${key}
     done
 
-    echo "docker exec -it ${vault}_1 vault init -address='https://127.0.0.1:8200' -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\""
+    sleep 10
+
+    echo "docker exec -it ${vault}_1 vault init -address='https://127.0.0.1:8200' -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\" > secrets/vault.keys && echo 'Vault initialized.'"
 
     docker exec -it ${vault}_1 vault init \
            -address='https://127.0.0.1:8200' \
@@ -261,6 +263,8 @@ init() {
            -key-threshold=${threshold} \
            -pgp-keys="${keys_arg}" > secrets/vault.keys \
     && echo 'Vault initialized.'
+
+    sleep 5
 
     echo
     _split_encrypted_keys ${KEYS[@]}
@@ -379,7 +383,7 @@ up() {
 _demo_up() {
     echo
     bold '* Standing up the Vault cluster...'
-    echo "docker-compose -f ${COMPOSE_FILE} up -d"
+    echo "docker-compose -f ${COMPOSE_FILE} up -d ${COMPOSE_FLAGS}"
     docker-compose -f "${COMPOSE_FILE}" up -d
     echo "docker-compose -f ${COMPOSE_FILE} scale ${service}=3"
     docker-compose -f "${COMPOSE_FILE}" scale "${service}"=3
@@ -563,6 +567,7 @@ demo() {
             -c | --tls-cert ) tls_cert=$2; shift 2;;
             -a | --ca-cert ) ca_cert=$2; shift 2;;
             -f | --compose-file ) COMPOSE_FILE=$2; shift 2;;
+            -l | --compose-flags ) COMPOSE_FLAGS=$2; shift 2;;
             -o | --openssl-conf ) openssl_config=$2; shift 2;;
             _ca | check_* | clean | help) cmd=$1; shift 1; $cmd; exit;;
             *) break;;
