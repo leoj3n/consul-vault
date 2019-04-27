@@ -80,10 +80,10 @@ EOF
 }
 
 # project and service name
-repo=autopilotpattern/vault
+repo=consul-vault
 project_version=0.1
-project=vault
-service=vault
+project=consul-vault
+service=consul
 vault="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-docker-compose.yml}
 
@@ -164,12 +164,13 @@ secure() {
 
     # we're generating this file so that the gossip key doesn't end up
     # getting committed to git
-    json -f ./etc/consul.json \
-         -e 'this.ca_file="/usr/local/share/ca-certificates/ca_cert.pem"' \
-         -e 'this.cert_file="/etc/ssl/certs/consul-vault.cert.pem"' \
-         -e 'this.key_file="/etc/ssl/private/consul-vault.key.pem"' \
-         -e $(printf 'this.encrypt="%s"' "${gossipKey}") \
-         > ./etc/consul-tls.json
+    cp ./etc/consul.hcl ./etc/consul-tls.hcl
+    cat << EOF >> './etc/consul-tls.hcl'
+ca_file = "/usr/local/share/ca-certificates/ca_cert.pem"
+cert_file = "/etc/ssl/certs/consul-vault.cert.pem"
+key_file = "/etc/ssl/private/consul-vault.key.pem"
+encrypt = "${gossipKey}"
+EOF
 
     for i in {1..3}; do
         echo "Securing ${vault}_$i..."
@@ -180,7 +181,7 @@ secure() {
         docker cp ${tls_key} ${vault}_$i:/etc/ssl/private/consul-vault.key.pem
 
         echo " updating Consul and Vault configuration for TLS"
-        docker cp ./etc/consul-tls.json ${vault}_$i:/etc/consul/consul.json
+        docker cp ./etc/consul-tls.hcl ${vault}_$i:/etc/consul/consul.hcl
         docker cp ./etc/vault-tls.hcl ${vault}_$i:/etc/vault.hcl
 
         echo " updating trusted root certificate (ignore the following warning)"
@@ -251,6 +252,9 @@ init() {
     do
         _copy_key ${key}
     done
+
+    echo "docker exec -it ${vault}_1 vault init -address='https://127.0.0.1:8200' -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\""
+
     docker exec -it ${vault}_1 vault init \
            -address='https://127.0.0.1:8200' \
            -key-shares=${#KEYS[@]} \

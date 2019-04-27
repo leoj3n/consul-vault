@@ -1,2 +1,4 @@
 _env*
+secrets/
+etc/consul-tls.hcl
 examples/triton-multi-dc/docker-compose-*.yml

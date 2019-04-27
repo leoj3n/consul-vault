@@ -1,4 +1,4 @@
-bind_addr = "0.0.0.0"
+bind_addr = "IP_ADDRESS"
 datacenter = "CONSUL_DATACENTER_NAME"
 data_dir = "/data"
 client_addr = "0.0.0.0"

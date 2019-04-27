@@ -6,7 +6,8 @@ set -eo pipefail
 # been told to listen on.
 #
 preStart() {
-  # sed -i "s/IP_ADDRESS/${CONTAINERPILOT_CONSUL_IP}/" /etc/vault.hcl
+  sed -i "s/IP_ADDRESS/${CONTAINERPILOT_CONSUL_IP}/" /etc/consul/consul.hcl
+  sed -i "s/IP_ADDRESS/${CONTAINERPILOT_CONSUL_IP}/" /etc/vault.hcl
 
   if [ -n "${CONSUL_DATACENTER_NAME}" ]; then
     _log "Updating consul datacenter name (specified: '${CONSUL_DATACENTER_NAME}' )"
