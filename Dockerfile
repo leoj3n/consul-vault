@@ -29,9 +29,9 @@ RUN export CONTAINERPILOT_CHECKSUM=1248784ff475e6fda69ebf7a2136adbfb902f74b \
     && rm /tmp/containerpilot.tar.gz
 
 # configuration files and bootstrap scripts
-COPY etc/containerpilot.json5 /etc/
-COPY etc/consul.hcl /etc/consul/
-COPY bin/* /usr/local/bin/
+COPY ./etc/containerpilot.json5 /etc/
+COPY ./etc/consul.hcl /etc/consul/
+COPY ./bin/ /usr/local/bin/
 
 # Put Consul data on a separate volume (via etc/consul.hcl) to avoid filesystem
 # performance issues with Docker image layers. Not necessary on Triton, but...
