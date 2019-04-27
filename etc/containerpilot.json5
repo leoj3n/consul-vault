@@ -1,40 +1,54 @@
 {
-  consul: "127.0.0.1:8500",
+  consul: '127.0.0.1:8500',
   jobs: [
     {
-      name: "preStart",
-      exec: ["/usr/local/bin/consul-manage", "preStart"],
+      name: 'preStart',
+      exec: '/usr/local/bin/consul-manage preStart',
     },
     {
-      name: "consul",
-      port: 8500,
-      {{ if .CONSUL_DEV }}exec: [
-        "/bin/consul", "agent",
-        "-dev",
-        "-config-dir=/etc/consul"],
-      {{ else }}exec: [
-        "/bin/consul", "agent",
-        "-server",
-        "-bootstrap-expect", "3",
-        "-config-dir=/etc/consul",
-        "-ui"],{{ end }}
+      name: 'preStop',
+      exec: 'consul leave',
       when: {
-        source: "preStart",
-        once: "exitSuccess"
+        source: 'consul',
+        once: 'stopping',
+      },
+    },
+    {
+      port: 8500,
+      name: 'consul',
+      {{ if .CONSUL_DEV }}exec: [
+        '/bin/consul', 'agent',
+        '-dev',
+        '-config-dir=/etc/consul'],
+      {{ else }}exec: [
+        '/bin/consul', 'agent',
+        '-server',
+        '-bootstrap-expect', '3',
+        '-config-dir=/etc/consul',
+        '-ui'],{{ end }}
+      when: {
+        source: 'preStart',
+        once: 'exitSuccess',
       },
       health:{
-        exec: ["/usr/local/bin/consul-manage", "health"],
+        ttl: 25,
         interval: 10,
-        ttl: 25
-      }
+        exec: '/usr/local/bin/consul-manage health',
+      },
     },
     {
-      name: "preStop",
-      exec: ["consul", "leave"],
+      port: 8200,
+      name: 'vault',
+      exec: '/bin/vault server -config /etc/vault.hcl',
       when: {
-        source: "consul",
-        once: "stopping"
-      }
-    }
-  ]
+        source: 'preStart',
+        once: 'exitSuccess',
+      },
+      health: {
+        ttl: 25,
+        interval: 10,
+        exec: '/usr/local/bin/vault-manage health',
+      },
+    },
+  ],
 }

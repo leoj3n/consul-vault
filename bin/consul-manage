@@ -6,6 +6,8 @@ set -eo pipefail
 # been told to listen on.
 #
 preStart() {
+  # sed -i "s/IP_ADDRESS/${CONTAINERPILOT_CONSUL_IP}/" /etc/vault.hcl
+
   if [ -n "${CONSUL_DATACENTER_NAME}" ]; then
     _log "Updating consul datacenter name (specified: '${CONSUL_DATACENTER_NAME}' )"
     sed -i "s/CONSUL_DATACENTER_NAME/${CONSUL_DATACENTER_NAME}/" /etc/consul/consul.hcl
@@ -75,6 +77,9 @@ health() {
     _log 'No peers in raft'
     consul join "${CONSUL}"
   fi
+
+  # 'vault status' returns non-zero exit code if not sealed
+  vault status
 }
 
 _log() {
