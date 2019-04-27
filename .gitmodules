@@ -1,0 +1,3 @@
+[submodule "test/triton-docker-cli"]
+	path = test/triton-docker-cli
+	url = https://github.com/joyent/triton-docker-cli

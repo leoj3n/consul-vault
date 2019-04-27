@@ -1,0 +1,132 @@
+#!/bin/bash
+set -eo pipefail
+
+#
+# Update the -advertise address based on the interface that ContainerPilot has
+# been told to listen on.
+#
+preStart() {
+
+    if [ -n "$CONSUL_DATACENTER_NAME" ]; then
+        _log "Updating consul datacenter name (specified: '${CONSUL_DATACENTER_NAME}' )"
+        sed -i "s/CONSUL_DATACENTER_NAME/${CONSUL_DATACENTER_NAME}/" /etc/consul/consul.hcl
+    elif [ -f "/native/usr/sbin/mdata-get" ]; then
+        DETECTED_DATACENTER_NAME=$(/native/usr/sbin/mdata-get sdc:datacenter_name)
+        _log "Updating consul datacenter name (detected: '${DETECTED_DATACENTER_NAME}')"
+        sed -i "s/CONSUL_DATACENTER_NAME/${DETECTED_DATACENTER_NAME}/" /etc/consul/consul.hcl
+    else
+        _log "Updating consul datacenter name (default: 'dc1')"
+        sed -i "s/CONSUL_DATACENTER_NAME/dc1/" /etc/consul/consul.hcl
+    fi
+
+    if [ -n "$CONSUL_RETRY_JOIN_WAN" ]; then
+        _log "Updating consul retry_join_wan field"
+        sed -i '/^retry_join_wan/d' /etc/consul/consul.hcl
+        echo "retry_join_wan = [${CONSUL_RETRY_JOIN_WAN}]" >> /etc/consul/consul.hcl
+
+        # translate_wan_addrs allows us to reach remote nodes through their advertise_addr_wan
+        sed -i '/^translate_wan_addrs/d' /etc/consul/consul.hcl
+        _log "Updating consul translate_wan_addrs field"
+        echo "translate_wan_addrs = true" >> /etc/consul/consul.hcl
+
+        # only set bind_addr = 0.0.0.0 if none was specified explicitly with CONSUL_BIND_ADDR
+        if [ -n "$CONSUL_BIND_ADDR" ]; then
+            updateConfigFromEnvOrDefault 'bind_addr' 'CONSUL_BIND_ADDR' "$CONTAINERPILOT_CONSUL_IP"
+        else
+            sed -i '/^bind_addr/d' /etc/consul/consul.hcl
+            _log "Updating consul field bind_addr to 0.0.0.0 CONSUL_BIND_ADDR was empty and CONSUL_RETRY_JOIN_WAN was not empty"
+            echo "bind_addr = \"0.0.0.0\"" >> /etc/consul/consul.hcl
+        fi
+    else
+        # if no WAN addresses were provided, set the bind_addr to the private address
+        updateConfigFromEnvOrDefault 'bind_addr' 'CONSUL_BIND_ADDR' "$CONTAINERPILOT_CONSUL_IP"
+    fi
+
+    IP_ADDRESS=$(hostname -i)
+
+    # the serf_lan_bind field was recently renamed to serf_wan
+    # serf_lan tells nodes their address within the LAN
+    updateConfigFromEnvOrDefault 'serf_lan'             'CONSUL_SERF_LAN_BIND'      "$CONTAINERPILOT_CONSUL_IP"
+
+    # the serf_wan_bind field was recently renamed to serf_wan
+    # if this field is not set WAN joins will be refused since the bind address will differ
+    # from the address used to reach the node
+    updateConfigFromEnvOrDefault 'serf_wan'             'CONSUL_SERF_WAN_BIND'      "$IP_ADDRESS"
+
+    # advertise_addr tells nodes their private, routeable address
+    updateConfigFromEnvOrDefault 'advertise_addr'       'CONSUL_ADVERTISE_ADDR'     "$CONTAINERPILOT_CONSUL_IP"
+
+    # advertise_addr_wan tells nodes their public address for WAN communication
+    updateConfigFromEnvOrDefault 'advertise_addr_wan'   'CONSUL_ADVERTISE_ADDR_WAN' "$IP_ADDRESS"
+}
+
+#
+# Check if a member of a raft. If consul info returns an error we'll pipefail
+# and exit for a failed health check.
+#
+# If we have no peers then try to join the raft via the CNS svc record.  Once a
+# node is connected to at least one other peer it'll get the rest of the raft
+# via the Consul LAN gossip.
+#
+# If we end up joining ourselves we just retry on the next health check until
+# we've got the whole cluster together.
+#
+health() {
+    if [ $(consul info | awk '/num_peers/{print$3}') == 0 ]; then
+        _log "No peers in raft"
+        consul join ${CONSUL}
+    fi
+}
+
+_log() {
+    echo "    $(date -u '+%Y-%m-%d %H:%M:%S') containerpilot: $@"
+}
+
+
+#
+# Defines $1 in the consul configuration as either an env or a default.
+# This basically behaves like ${!name_of_var} and ${var:-default} together
+# but separates the  indirect reference from the default so it's more obvious
+#
+# Check if $2 is the name of a defined environment variable and use ${!2} to
+# reference it indirectly.
+#
+# If it is not defined, use $3 as the value
+#
+updateConfigFromEnvOrDefault() {
+    _log "Updating consul field $1"
+    sed -i "/^$1/d" /etc/consul/consul.hcl
+
+    if [ -n "${!2}" ]; then
+        echo "$1 = \"${!2}\"" >> /etc/consul/consul.hcl
+    else
+        echo "$1 = \"$3\"" >> /etc/consul/consul.hcl
+    fi
+}
+
+# ---------------------------------------------------
+# parse arguments
+
+# Get function list
+funcs=($(declare -F -p | cut -d " " -f 3))
+
+until
+    if [ ! -z "$1" ]; then
+        # check if the first arg is a function in this file, or use a default
+        if [[ " ${funcs[@]} " =~ " $1 " ]]; then
+            cmd=$1
+            shift 1
+        fi
+
+        $cmd "$@"
+        if [ $? == 127 ]; then
+            help
+        fi
+
+        exit
+    else
+        health
+    fi
+do
+    echo
+done
