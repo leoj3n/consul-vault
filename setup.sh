@@ -76,7 +76,6 @@ setup.sh demo clean:
 	Cleans up the demo PGP keys and CA.
 
 EOF
-
 }
 
 # project and service name
@@ -126,17 +125,25 @@ _var_or_exit() {
     fi
 }
 
-# upload public key file to Vault
-_copy_key() {
-    local keyfile=$1
-    echo "Uploading public keyfile ${keyfile} to vault instance"
-    docker cp secrets/${keyfile} ${vault}_1:${keyfile}
+_copy_chown() {
+  local src=$1
+  local inst=$2
+  local dest=$3
+  docker cp ${src} ${inst}:${dest}
+  docker exec ${inst} chown root:root ${dest}
+  docker exec ${inst} chmod 755 ${dest}
 }
 
-# create gossip token, and install token and keys on Consul instances
-# to encrypt both gossip and RPC
-secure() {
+# copy public key file to Vault
+_copy_key() {
+    local keyfile=$1
+    echo "Copying public keyfile ${keyfile} to vault instance"
+    _copy_chown "./secrets/${keyfile}" "${vault}_1" "${keyfile}"
+}
 
+# create gossip token, and install token and keys on Consul instances to
+# encrypt both gossip and RPC
+secure() {
     while true; do
         case $1 in
             -k | --tls-key ) tls_key=$2; shift 2;;
@@ -148,9 +155,9 @@ secure() {
     done
 
     if [ -z ${gossipKeyFile} ]; then
-        echo 'Gossip key not provided; will be generated at secrets/gossip.key'
-        gossipKey=$(docker exec -it ${vault}_1 consul keygen | tr -d '\r')
-        echo ${gossipKey} > secrets/gossip.key
+        echo 'Gossip key not provided; will be generated at ./secrets/gossip.key'
+        gossipKey=$(docker exec ${vault}_1 consul keygen | tr -d '\r')
+        echo ${gossipKey} > ./secrets/gossip.key
     else
         gossipKey=$(cat ${gossipKeyFile})
     fi
@@ -162,7 +169,7 @@ secure() {
     _file_or_exit "${tls_cert}" "TLS cert ${tls_cert} does not exist. Exiting!"
     _file_or_exit "${tls_key}" "TLS cert ${tls_key} does not exist. Exiting!"
 
-    # we're generating this file so that the gossip key doesn't end up
+    # we're generating this file so that the embedded gossip key doesn't end up
     # getting committed to git
     cp ./etc/consul.hcl ./etc/consul-tls.hcl
     cat << EOF >> './etc/consul-tls.hcl'
@@ -173,25 +180,30 @@ encrypt = "${gossipKey}"
 EOF
 
     for i in {1..3}; do
-        echo "Securing ${vault}_$i..."
-        echo " copying certificates and keys"
-        docker exec -it ${vault}_$i mkdir -p /etc/ssl/private
-        docker cp ${ca_cert} ${vault}_$i:/usr/local/share/ca-certificates/ca_cert.pem
-        docker cp ${tls_cert} ${vault}_$i:/etc/ssl/certs/consul-vault.cert.pem
-        docker cp ${tls_key} ${vault}_$i:/etc/ssl/private/consul-vault.key.pem
+        echo "Securing ${vault}_${i}..."
 
-        echo " updating Consul and Vault configuration for TLS"
-        docker cp ./etc/consul-tls.hcl ${vault}_$i:/etc/consul/consul.hcl
-        docker cp ./etc/vault-tls.hcl ${vault}_$i:/etc/vault.hcl
+        echo ' copying certificates and keys'
+        docker exec "${vault}_${i}" mkdir -p '/etc/ssl/private'
+        _copy_chown "${ca_cert}" "${vault}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
+        _copy_chown "${tls_cert}" "${vault}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
+        _copy_chown "${tls_key}" "${vault}_${i}" '/etc/ssl/private/consul-vault.key.pem'
 
-        echo " updating trusted root certificate (ignore the following warning)"
-        docker exec -it ${vault}_$i update-ca-certificates
+        echo ' updating Consul and Vault configuration for TLS'
+        _copy_chown './etc/consul-tls.hcl' "${vault}_${i}" '/etc/consul/consul.hcl'
+        _copy_chown './etc/vault-tls.hcl' "${vault}_${i}" '/etc/vault.hcl'
+
+        echo ' updating trusted root certificate (ignore the following warning)'
+        docker exec "${vault}_${i}" 'update-ca-certificates'
     done
+    
+    sleep 10
 
-    # unfortunately we can't do a graceful reload here
+    # unfortunately, we can't do a graceful reload here
     echo
     echo 'Restarting cluster with new configuration'
-    docker-compose -f ${COMPOSE_FILE} restart ${service}
+    docker-compose -f "${COMPOSE_FILE}" restart "${service}"
+
+    sleep 60
 }
 
 # ensure that the user has provided public key(s) and that a valid
@@ -245,26 +257,28 @@ init() {
             *) break;;
         esac
     done
-    mkdir -p secrets/
+
+    mkdir -p ./secrets/
+
     IFS=',' read -r -a KEYS <<< "${keys_arg}"
     _validate_args
-    for key in ${KEYS[@]}
-    do
-        _copy_key ${key}
+    for key in ${KEYS[@]}; do
+      _copy_key "${key}"
     done
 
-    sleep 10
+    echo "docker exec ${vault}_1 vault init -address='https://127.0.0.1:8200' -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\" > secrets/vault.keys"
 
-    echo "docker exec -it ${vault}_1 vault init -address='https://127.0.0.1:8200' -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\" > secrets/vault.keys && echo 'Vault initialized.'"
+    until
+      docker exec ${vault}_1 vault init \
+        -address='https://127.0.0.1:8200' \
+        -key-shares=${#KEYS[@]} \
+        -key-threshold=${threshold} \
+        -pgp-keys="/${keys_arg}" > secrets/vault.keys
+    do
+      sleep 1
+    done
 
-    docker exec -it ${vault}_1 vault init \
-           -address='https://127.0.0.1:8200' \
-           -key-shares=${#KEYS[@]} \
-           -key-threshold=${threshold} \
-           -pgp-keys="${keys_arg}" > secrets/vault.keys \
-    && echo 'Vault initialized.'
-
-    sleep 5
+    echo 'Vault initialized.'
 
     echo
     _split_encrypted_keys ${KEYS[@]}
@@ -287,24 +301,31 @@ unseal() {
     echo 'Use the unseal key above when prompted while we unseal each Vault node...'
     echo
     for i in {1..3}; do
-        docker exec -it ${vault}_$i \
-             vault unseal -address='https://127.0.0.1:8200'
+        bold "* Unsealing ${vault}_$i"
+        until
+          docker exec -it ${vault}_$i vault unseal -address='https://127.0.0.1:8200'
+        do
+          sleep 1
+        done
     done
 }
 
-# upload a local policy file to a Vault instance and write it to the Vault
-# via `docker exec`
+# upload a local policy file to a Vault instance and write it to the Vault via
+# `docker exec`
 policy() {
     local policyname=$1
     local policyfile=$2
+
     _var_or_exit policyname 'You must provide a name for the policy!'
     _file_or_exit "${policyfile}" "${policyfile} not found."
 
-    docker cp ${policyfile} ${vault}_1:/tmp/$(basename ${policyfile})
+    _copy_chown "${policyfile}" "${vault}_1" "/tmp/$(basename ${policyfile})"
+
     docker exec -it ${vault}_1 vault auth -address='https://127.0.0.1:8200'
+
     docker exec -it ${vault}_1 \
-           vault policy-write -address='https://127.0.0.1:8200' \
-           ${policyname} /tmp/$(basename ${policyfile})
+      vault policy-write -address='https://127.0.0.1:8200' \
+      "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
 
@@ -383,10 +404,8 @@ up() {
 _demo_up() {
     echo
     bold '* Standing up the Vault cluster...'
-    echo "docker-compose -f ${COMPOSE_FILE} up -d ${COMPOSE_FLAGS}"
-    docker-compose -f "${COMPOSE_FILE}" up -d
-    echo "docker-compose -f ${COMPOSE_FILE} scale ${service}=3"
-    docker-compose -f "${COMPOSE_FILE}" scale "${service}"=3
+    echo "docker-compose -f ${COMPOSE_FILE} up --detach --scale ${service}=3"
+    docker-compose -f "${COMPOSE_FILE}" up --detach --scale ${service}=3
 }
 
 _demo_secure() {
@@ -399,15 +418,13 @@ _demo_secure() {
 _demo_wait_for_consul() {
     echo
     bold '* Waiting for Consul to form raft...'
-    while :
+    until
+      docker exec ${vault}_1 consul info | grep -q "num_peers = 2"
     do
-        docker exec -it ${vault}_1 consul info | grep -q "num_peers = 2" && break
-        echo -n '.'
-        sleep 1
+      echo -n '.'
+      sleep 1
     done
-    reset # something here is breaking the terminal
 }
-
 
 check_tls() {
     if [ -z "${tls_cert}" ] || [ -z "${tls_key}" ]; then
@@ -494,16 +511,17 @@ _cert() {
 check_pgp() {
     if [ -z ${pgp_key} ]; then
         cat << EOF
-${fmt_rev}${fmt_bold}You have not provided a value for --pgp-key. In the next step we will create a
-trusted PGP keypair in your GPG key ring. The public key will be uploaded to the
-Vault instances. The private key will not be exported or leave this machine!${fmt_reset}
+${fmt_rev}${fmt_bold}You have not provided a value for --pgp-key. In the next
+step we will create a trusted PGP keypair in your GPG key ring. The public key
+will be uploaded to the Vault instances. The private key will not be exported
+or leave this machine!${fmt_reset}
 EOF
         echo
         read -rsp $'Press any key to continue or Ctrl-C to cancel...\n' -n1 key
         echo
-        mkdir -p secrets/
+        mkdir -p ./secrets/
         bold '* Creating PGP key...'
-        gpg -q --batch --gen-key <<EOF
+        gpg -q --batch --gen-key << EOF
 Key-Type: RSA
 Key-Length: 2048
 Name-Real: Example User
@@ -511,13 +529,13 @@ Name-Email: example@example.com
 Expire-Date: 0
 %commit
 EOF
-        gpg --export 'Example User <example@example.com>' | base64 > secrets/example.asc
-        PGP_KEYFILE="example.asc"
-        bold '* Created a PGP key and exported the public key to ./secrets/example.asc'
+        PGP_KEYFILE='example.asc'
+        gpg --export 'Example User <example@example.com>' | base64 > ./secrets/${PGP_KEYFILE}
+        bold "* Created a PGP key and exported the public key to ./secrets/${PGP_KEYFILE}"
     else
         bold '* Exporting PGP public key ${pgp_key} to file'
-        gpg --export "${pgp_key}" | base64 > secrets/${pgp_key}.asc
-        PGP_KEYFILE="secrets/${pgp_key}.asc"
+        gpg --export "${pgp_key}" | base64 > ./secrets/${pgp_key}.asc
+        PGP_KEYFILE="./secrets/${pgp_key}.asc"
     fi
 }
 
@@ -535,10 +553,10 @@ _demo_unseal() {
     echo
     bold '* Unsealing the vault with your PGP key. If you had multiple keys,';
     bold '  each operator would unseal the vault with their own key as follows:'
-    echo '  ./setup.sh unseal secrets/mykey1.asc.key'
+    echo '  ./setup.sh unseal ./secrets/mykey1.asc.key'
     echo
     echo "./setup.sh unseal ${PGP_KEYFILE}.key"
-    unseal "secrets/${PGP_KEYFILE}.key"
+    unseal "./secrets/${PGP_KEYFILE}.key"
 }
 
 _demo_policy() {
@@ -567,7 +585,6 @@ demo() {
             -c | --tls-cert ) tls_cert=$2; shift 2;;
             -a | --ca-cert ) ca_cert=$2; shift 2;;
             -f | --compose-file ) COMPOSE_FILE=$2; shift 2;;
-            -l | --compose-flags ) COMPOSE_FLAGS=$2; shift 2;;
             -o | --openssl-conf ) openssl_config=$2; shift 2;;
             _ca | check_* | clean | help) cmd=$1; shift 1; $cmd; exit;;
             *) break;;

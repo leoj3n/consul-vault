@@ -31,9 +31,9 @@ RUN export VAULT_CHECKSUM=04d87dd553aed59f3fe316222217a8d8777f40115a115dac4d88fa
   && chmod +x /bin/vault \
   && rm /tmp/${archive}
 
-COPY ./etc/vault.hcl /etc/
-COPY ./etc/consul.hcl /etc/consul/
-COPY ./etc/containerpilot.json5 /etc/
+COPY --chown=755 ./etc/vault.hcl /etc/
+COPY --chown=755 ./etc/consul.hcl /etc/consul/
+COPY --chown=755 ./etc/containerpilot.json5 /etc/
 COPY --chown=755 ./bin/ /usr/local/bin/
 
 # Put Consul data on a separate volume (via etc/consul.hcl) to avoid filesystem
