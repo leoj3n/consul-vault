@@ -44,11 +44,6 @@
         source: 'preStart',
         once: 'exitSuccess',
       },
-      health: {
-        ttl: 25,
-        interval: 10,
-        exec: '/usr/local/bin/vault-manage health',
-      },
     },
   ],
 }
