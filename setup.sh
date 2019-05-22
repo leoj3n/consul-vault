@@ -145,21 +145,21 @@ _copy_key() {
 # encrypt both gossip and RPC
 secure() {
     while true; do
-        case $1 in
-            -k | --tls-key ) tls_key=$2; shift 2;;
-            -c | --tls-cert ) tls_cert=$2; shift 2;;
-            -a | --ca-cert ) ca_cert=$2; shift 2;;
-            -g | --gossip ) gossipKeyFile=$2; shift 2;;
-            *) break;;
-        esac
+      case $1 in
+        -k | --tls-key ) tls_key=$2; shift 2;;
+        -c | --tls-cert ) tls_cert=$2; shift 2;;
+        -a | --ca-cert ) ca_cert=$2; shift 2;;
+        -g | --gossip ) gossipKeyFile=$2; shift 2;;
+        *) break;;
+      esac
     done
 
     if [ -z ${gossipKeyFile} ]; then
-        echo 'Gossip key not provided; will be generated at ./secrets/gossip.key'
-        gossipKey=$(docker exec ${vault}_1 consul keygen | tr -d '\r')
-        echo ${gossipKey} > ./secrets/gossip.key
+      echo 'Gossip key not provided; will be generated at ./secrets/gossip.key'
+      gossipKey=$(docker exec ${vault}_1 consul keygen | tr -d '\r')
+      echo ${gossipKey} > ./secrets/gossip.key
     else
-        gossipKey=$(cat ${gossipKeyFile})
+      gossipKey=$(cat ${gossipKeyFile})
     fi
 
     if [ -z ${ca_cert} ]; then
@@ -180,20 +180,20 @@ encrypt = "${gossipKey}"
 EOF
 
     for i in {1..3}; do
-        echo "Securing ${vault}_${i}..."
+      echo "Securing ${vault}_${i}..."
 
-        echo ' copying certificates and keys'
-        docker exec "${vault}_${i}" mkdir -p '/etc/ssl/private'
-        _copy_chown "${ca_cert}" "${vault}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
-        _copy_chown "${tls_cert}" "${vault}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
-        _copy_chown "${tls_key}" "${vault}_${i}" '/etc/ssl/private/consul-vault.key.pem'
+      echo ' copying certificates and keys'
+      docker exec "${vault}_${i}" mkdir -p '/etc/ssl/private'
+      _copy_chown "${ca_cert}" "${vault}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
+      _copy_chown "${tls_cert}" "${vault}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
+      _copy_chown "${tls_key}" "${vault}_${i}" '/etc/ssl/private/consul-vault.key.pem'
 
-        echo ' updating Consul and Vault configuration for TLS'
-        _copy_chown './etc/consul-tls.hcl' "${vault}_${i}" '/etc/consul/consul.hcl'
-        _copy_chown './etc/vault-tls.hcl' "${vault}_${i}" '/etc/vault.hcl'
+      echo ' updating Consul and Vault configuration for TLS'
+      _copy_chown './etc/consul-tls.hcl' "${vault}_${i}" '/etc/consul/consul.hcl'
+      _copy_chown './etc/vault-tls.hcl' "${vault}_${i}" '/etc/vault.hcl'
 
-        echo ' updating trusted root certificate (ignore the following warning)'
-        docker exec "${vault}_${i}" 'update-ca-certificates'
+      echo ' updating trusted root certificate (ignore the following warning)'
+      docker exec "${vault}_${i}" 'update-ca-certificates'
     done
     
     sleep 10
