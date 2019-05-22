@@ -195,15 +195,13 @@ EOF
       echo ' updating trusted root certificate (ignore the following warning)'
       docker exec "${vault}_${i}" 'update-ca-certificates'
     done
-    
-    sleep 10
 
     # unfortunately, we can't do a graceful reload here
     echo
     echo 'Restarting cluster with new configuration'
     docker-compose -f "${COMPOSE_FILE}" restart "${service}"
 
-    sleep 60
+    sleep 10
 }
 
 # ensure that the user has provided public key(s) and that a valid

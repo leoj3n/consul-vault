@@ -78,9 +78,6 @@ health() {
     _log 'No peers in raft'
     consul join "${CONSUL}"
   fi
-
-  # 'vault status' returns non-zero exit code if not sealed
-  vault status
 }
 
 _log() {
@@ -99,12 +96,12 @@ _log() {
 #
 updateConfigFromEnvOrDefault() {
   _log "Updating consul field ${1}"
-  sed -i "/^${1}/d" /etc/consul/consul.hcl
+  sed -i "/^${1}/d" '/etc/consul/consul.hcl'
 
   if [ -n "${!2}" ]; then
-    echo "${1} = \"${!2}\"" >> /etc/consul/consul.hcl
+    echo "${1} = \"${!2}\"" >> '/etc/consul/consul.hcl'
   else
-    echo "${1} = \"${3}\"" >> /etc/consul/consul.hcl
+    echo "${1} = \"${3}\"" >> '/etc/consul/consul.hcl'
   fi
 }
 
@@ -123,7 +120,7 @@ until
     fi
 
     "${cmd}" "${@}"
-    if [ ${?} == 127 ]; then
+    if [ "${?}" == 127 ]; then
       help
     fi
 
