@@ -1,5 +1,5 @@
 backend "consul" {
-  address = "127.0.0.1:8500"
+  address = "IP_ADDRESS:8500"
   path = "vault"
 }
 
@@ -9,4 +9,5 @@ listener "tcp" {
   tls_key_file = "/etc/ssl/private/consul-vault.key.pem"
 }
 
+api_addr = "https://IP_ADDRESS:8200"
 disable_mlock = true

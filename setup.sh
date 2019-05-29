@@ -193,15 +193,11 @@ EOF
       _copy_chown './etc/vault-tls.hcl' "${vault}_${i}" '/etc/vault.hcl'
 
       echo ' updating trusted root certificate (ignore the following warning)'
-      docker exec "${vault}_${i}" 'update-ca-certificates'
+      docker exec "${vault}_${i}" update-ca-certificates
+
+      echo " reloading ${vault}_${i} with new configuration"
+      docker exec "${vault}_${i}" containerpilot -reload
     done
-
-    # unfortunately, we can't do a graceful reload here
-    echo
-    echo 'Restarting cluster with new configuration'
-    docker-compose -f "${COMPOSE_FILE}" restart "${service}"
-
-    sleep 10
 }
 
 # ensure that the user has provided public key(s) and that a valid
@@ -256,7 +252,7 @@ init() {
         esac
     done
 
-    mkdir -p ./secrets/
+    mkdir -p './secrets/'
 
     IFS=',' read -r -a KEYS <<< "${keys_arg}"
     _validate_args
@@ -264,11 +260,10 @@ init() {
       _copy_key "${key}"
     done
 
-    echo "docker exec ${vault}_1 vault init -address='https://127.0.0.1:8200' -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\" > secrets/vault.keys"
+    echo "docker exec ${vault}_1 vault operator init -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\" > secrets/vault.keys"
 
     until
-      docker exec ${vault}_1 vault init \
-        -address='https://127.0.0.1:8200' \
+      docker exec ${vault}_1 vault operator init \
         -key-shares=${#KEYS[@]} \
         -key-threshold=${threshold} \
         -pgp-keys="/${keys_arg}" > secrets/vault.keys
@@ -299,16 +294,17 @@ unseal() {
     echo 'Use the unseal key above when prompted while we unseal each Vault node...'
     echo
     for i in {1..3}; do
-        bold "* Unsealing ${vault}_$i"
-        until
-          docker exec -it ${vault}_$i vault unseal -address='https://127.0.0.1:8200'
-        do
-          sleep 1
-        done
+      echo
+      bold "* Unsealing ${vault}_$i"
+      until
+        docker exec -it ${vault}_$i vault operator unseal
+      do
+        sleep 1
+      done
     done
 }
 
-# upload a local policy file to a Vault instance and write it to the Vault via
+# copy a local policy file to a Vault instance and write it to the Vault via
 # `docker exec`
 policy() {
     local policyname=$1
@@ -319,11 +315,10 @@ policy() {
 
     _copy_chown "${policyfile}" "${vault}_1" "/tmp/$(basename ${policyfile})"
 
-    docker exec -it ${vault}_1 vault auth -address='https://127.0.0.1:8200'
+    docker exec -it ${vault}_1 vault login
 
     docker exec -it ${vault}_1 \
-      vault policy-write -address='https://127.0.0.1:8200' \
-      "${policyname}" "/tmp/$(basename ${policyfile})"
+      vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
 
@@ -539,8 +534,8 @@ EOF
 
 _demo_init() {
     echo
-    bold '* Initializing the vault with your PGP key. If you had multiple keys you'
-    bold '  would pass these into the setup script as follows:'
+    bold '* Initializing the vault with your PGP key. If you had multiple';
+    bold '  keys you would pass these into the setup script as follows:'
     echo "  ./setup.sh init -k 'mykey1.asc,mykey2.asc' -t 2"
     echo
     echo "./setup.sh init -k ${PGP_KEYFILE} -t 1"
@@ -559,8 +554,8 @@ _demo_unseal() {
 
 _demo_policy() {
     echo
-    bold '* Adding an example ACL policy. Use the token you received previously';
-    bold '  when prompted.'
+    bold '* Adding an example ACL policy. Use the token you received';
+    bold '  previously when prompted.'
     echo
     echo "./setup.sh policy secret ./policies/example.hcl"
     policy secret ./policies/example.hcl
@@ -592,17 +587,18 @@ demo() {
     check_tls
     check_pgp
     check_triton
-    _demo_up
-    _demo_wait_for_consul
-    _demo_secure
-    _demo_init
-    _demo_unseal
-    _demo_policy
+
+    _demo_up              # docker-compose up
+    _demo_wait_for_consul # wait for consul to form 3-node raft
+    _demo_secure          # copy certificates, restart raft
+    _demo_init            # copy secret keys, run vault operator init
+    _demo_unseal          # ask operator for unseal key
+    _demo_policy          # login to vault, apply policy
 }
 
 
 build() {
-    docker build --tag autopilotpattern/vault .
+    docker build --tag leoj3n/consul-vault .
 }
 
 ship() {

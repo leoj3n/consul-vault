@@ -1,11 +1,11 @@
 path "secret/*" {
-  policy = "write"
+  capabilities = ["create", "read", "update", "delete", "list"]
 }
 
 path "secret/foo" {
-  policy = "read"
+  capabilities = ["read"]
 }
 
 path "auth/token/lookup-self" {
-  policy = "read"
+  capabilities = ["read"]
 }

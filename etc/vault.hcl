@@ -8,4 +8,5 @@ listener "tcp" {
   tls_disable = 1
 }
 
+api_addr = "https://IP_ADDRESS:8200"
 disable_mlock = true
