@@ -260,7 +260,7 @@ init() {
       _copy_key "${key}"
     done
 
-    echo "docker exec ${vault}_1 vault operator init -key-shares=${#KEYS[@]} -key-threshold=${threshold} -pgp-keys=\"${keys_arg}\" > secrets/vault.keys"
+    echo 'Attempting to initialize vault (this may take up to 20 seconds before succeeding)'
 
     until
       docker exec ${vault}_1 vault operator init \

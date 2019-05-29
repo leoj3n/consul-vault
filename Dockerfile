@@ -21,7 +21,6 @@ RUN export CONSUL_CHECKSUM=585782e1fb25a2096e1776e2da206866b1d9e1f10b71317e682e0
     && chmod +x /bin/consul \
     && rm /tmp/${archive}
 
-#ENV VAULT_VERSION=0.6.4
 ENV VAULT_VERSION=1.1.2
 RUN export VAULT_CHECKSUM=e927fd4daac11f6c7b8b3f1f53f2017516e29e99585dc975b657acdeac43500b \
   && export archive=vault_${VAULT_VERSION}_linux_amd64.zip \

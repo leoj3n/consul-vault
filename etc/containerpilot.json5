@@ -49,7 +49,7 @@
       health:{
         ttl: 25,
         interval: 10,
-        exec: 'vault status',
+        exec: '/usr/local/bin/consul-manage vaultHealth',
       },
     },
   ],

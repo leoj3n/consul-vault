@@ -80,6 +80,10 @@ health() {
   fi
 }
 
+vaultHealth() {
+  vault status
+}
+
 _log() {
   echo "    $(date -u '+%Y-%m-%d %H:%M:%S') containerpilot: ${@}"
 }
