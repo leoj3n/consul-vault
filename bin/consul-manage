@@ -81,7 +81,7 @@ health() {
 }
 
 vaultHealth() {
-  vault status
+  vault status >/dev/null
 }
 
 _log() {
