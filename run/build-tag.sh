@@ -1,1 +1,1 @@
-docker build -t consul-vault . && docker tag consul-vault:latest consul-vault:staging
+docker-compose build --tag consul-vault:latest --tag consul-vault:staging consul-vault

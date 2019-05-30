@@ -16,17 +16,10 @@
     {
       port: 8500,
       name: 'consul',
-      restarts: 'unlimited',
-      {{ if .CONSUL_DEV }}exec: [
-        '/bin/consul', 'agent',
-        '-dev',
-        '-config-dir=/etc/consul'],
-      {{ else }}exec: [
-        '/bin/consul', 'agent',
-        '-server',
-        '-bootstrap-expect', '3',
-        '-config-dir=/etc/consul',
-        '-ui'],{{ end }}
+      exec: [
+        '/bin/consul', 'agent', '-config-dir=/etc/consul', '-ui',
+        {{ if .IS_DEV }}'-dev',{{ else }}'-server', '-bootstrap-expect=3',{{ end }}
+      ],
       when: {
         source: 'preStart',
         once: 'exitSuccess',
@@ -40,8 +33,9 @@
     {
       port: 8200,
       name: 'vault',
-      restarts: 'unlimited',
-      exec: '/bin/vault server -config /etc/vault.hcl',
+      exec: [
+        '/bin/vault', 'server', '-config=/etc/vault.hcl', {{ if .IS_DEV }}'-dev',{{ end }}
+      ],
       when: {
         source: 'preStart',
         once: 'exitSuccess',
