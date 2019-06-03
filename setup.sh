@@ -265,7 +265,8 @@ init() {
     _copy_key "${key}"
   done
 
-  echo 'Attempting to initialize vault (may take up to 20 seconds before succeeding)'
+  echo 'Attempting to initialize vault (Note: May take as long as 30 seconds/tries '
+  echo 'before succeeding)...'
 
   until
     docker exec ${instance}_1 vault operator init \
@@ -308,8 +309,7 @@ unseal() {
   done
 }
 
-# copy a local policy file to a Vault instance and write it to the Vault via
-# `docker exec`
+# copy a local policy file to the first instance and `vault policy write`
 policy() {
   local policyname=$1
   local policyfile=$2
@@ -325,6 +325,14 @@ policy() {
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
+# enable the "kv" secrets engine for passed paths using the first instance
+engine() {
+  local paths="$@"
+
+  for path in "${paths}"; do
+    docker exec -it "${instance}_1" vault secrets enable -path="${path}" kv
+  done
+}
 
 # Check for correct configuration for running on Triton.
 # Create _env file with CNS name for Consul.
@@ -399,9 +407,9 @@ up() {
 
 _demo_up() {
   echo
-  bold '* Standing up the Vault cluster...'
-  echo "docker-compose -f ${COMPOSE_FILE} up --detach --scale ${service}=3"
-  docker-compose -f "${COMPOSE_FILE}" up --detach --scale ${service}=3
+  bold "* Composing cluster of 3 ${service} service instances..."
+  echo "docker-compose --file ${COMPOSE_FILE} up --detach --scale ${service}=3"
+  docker-compose --file "${COMPOSE_FILE}" up --detach --scale "${service}=3"
 }
 
 _demo_secure() {
@@ -601,11 +609,19 @@ _demo_unseal() {
 
 _demo_policy() {
   echo
-  bold '* Adding an example ACL policy. Use the token you received';
+  bold '* Adding an example ACL policy. Use the token you received'
   bold '  previously when prompted.'
   echo
   echo "./setup.sh policy secret ./policies/example.hcl"
-  policy secret ./policies/example.hcl
+  policy 'secret' './policies/example.hcl'
+}
+
+_demo_engine() {
+  echo
+  bold '* Enabling the "kv" secrets engine at the secret/ path.'
+  echo
+  echo "./setup.sh engine secret/"
+  engine 'secret/'
 }
 
 clean() {
@@ -614,7 +630,7 @@ clean() {
   gpg --delete-secret-keys $key
   gpg --delete-keys $key
   bold '* Deleting the CA and associated keys'
-  rm -rf secrets/
+  rm -rf './secrets/'
 }
 
 demo() {
@@ -641,6 +657,7 @@ demo() {
   _demo_init            # copy secret keys, run vault operator init
   _demo_unseal          # ask operator for unseal key
   _demo_policy          # login to vault, apply policy
+  _demo_engine         # enable the kv engine for secret/ path
 }
 
 
@@ -660,7 +677,7 @@ ship() {
 
 while true; do
     case $1 in
-        check | check_* | up | secure | init | unseal | policy | demo | build | ship | help) cmd=$1; shift; break;;
+        check | check_* | up | secure | init | unseal | policy | engine | demo | build | ship | help) cmd=$1; shift; break;;
         *) break;;
     esac
 done

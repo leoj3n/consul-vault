@@ -76,7 +76,7 @@ preStart() {
 health() {
   if [ "$(consul info | awk '/num_peers/{print$3}')" == 0 ]; then
     _log 'No peers in raft'
-    consul join "${CONSUL}"
+    consul join "${SERVICE_HOST_NAME}"
   fi
 }
 
