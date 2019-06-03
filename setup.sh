@@ -57,6 +57,9 @@ setup.sh policy [policyname] [policyfile]:
 	Adds an ACL to the Vault cluster by uploading a policy HCL file and writing
 	it via 'vault policy-write'.
 
+setup.sh engine path [path]:
+  Enable the "kv" secrets engine at passed path(s).
+
 --------------------------------------------------------------------------------
 
 setup.sh demo:
@@ -325,11 +328,11 @@ policy() {
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
-# enable the "kv" secrets engine for passed paths using the first instance
+# enable the "kv" secrets engine at passed paths using the first instance
 engine() {
-  local paths="$@"
+  local paths=("${@}")
 
-  for path in "${paths}"; do
+  for path in "${paths[@]}"; do
     docker exec -it "${instance}_1" vault secrets enable -path="${path}" kv
   done
 }
@@ -657,7 +660,7 @@ demo() {
   _demo_init            # copy secret keys, run vault operator init
   _demo_unseal          # ask operator for unseal key
   _demo_policy          # login to vault, apply policy
-  _demo_engine         # enable the kv engine for secret/ path
+  _demo_engine          # enable the "kv" secrets engine at secret/
 }
 
 
