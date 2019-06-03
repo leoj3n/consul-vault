@@ -1,3 +1,3 @@
 #!/usr/bin/env zsh
 
-./setup.sh demo --compose-file 'yml/local-compose.yml' "${@}"
+"${0:a:h}/setup.sh" demo "${@}"
