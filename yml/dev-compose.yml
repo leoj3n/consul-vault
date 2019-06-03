@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+
+  consul-vault:
+    ports:
+      - "8200:8200"
+      - "8500:8500"
+    environment:
+      - IS_DEV=1

@@ -74,14 +74,26 @@ preStart() {
 # we've got the whole cluster together.
 #
 health() {
-  if [ "$(consul info | awk '/num_peers/{print$3}')" == 0 ]; then
-    _log 'No peers in raft'
-    consul join "${SERVICE_HOST_NAME}"
+  if [ _is_set "${IS_DEV}" ]; then
+    consul info >/dev/null
+  else
+    if [ "$(consul info | awk '/num_peers/{print$3}')" == 0 ]; then
+      _log 'No peers in raft'
+      consul join "${SERVICE_HOST_NAME}"
+    fi
   fi
 }
 
 vaultHealth() {
-  vault status >/dev/null
+  if _is_set "${IS_DEV}"; then
+    vault status -address='http://127.0.0.1:8200' >/dev/null
+  else
+    vault status >/dev/null
+  fi
+}
+
+_is_set() {
+  [ -n "${1}" ]
 }
 
 _log() {

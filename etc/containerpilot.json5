@@ -34,7 +34,8 @@
       port: 8200,
       name: 'vault',
       exec: [
-        '/bin/vault', 'server', '-config=/etc/vault.hcl', {{ if .IS_DEV }}'-dev',{{ end }}
+        '/bin/vault', 'server',
+        {{ if .IS_DEV }}'-dev', "-dev-listen-address=0.0.0.0:8200",{{else}}'-config=/etc/vault.hcl',{{ end }}
       ],
       when: {
         source: 'preStart',

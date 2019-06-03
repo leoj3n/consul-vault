@@ -346,7 +346,7 @@ check() {
     echo 'See https://docs.joyent.com/public-cloud/api-access/docker'
     exit 1
   }
-  if [ ${COMPOSE_FILE} != "local-compose.yml" ]; then
+  if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
   command -v triton >/dev/null 2>&1 || {
     echo
     echo 'Error! Joyent Triton CLI is not installed!'
@@ -360,7 +360,7 @@ check() {
     exit 1
   }
 
-  if [ ${COMPOSE_FILE} != "local-compose.yml" ]; then
+  if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
     # make sure Docker client is pointed to the same place as the Triton client
     local docker_user=$(docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
     local docker_dc=$(echo $DOCKER_HOST | awk -F"/" '{print $3}' | awk -F'.' '{print $1}')
@@ -412,7 +412,7 @@ _demo_up() {
   echo
   bold "* Composing cluster of 3 ${service} service instances..."
   echo "docker-compose --file ${COMPOSE_FILE} up --detach --scale ${service}=3"
-  docker-compose --file "${COMPOSE_FILE}" up --detach --scale "${service}=3"
+  docker-compose --project-name "${project}" --file "${COMPOSE_FILE}" up --detach --scale "${service}=3"
 }
 
 _demo_secure() {
