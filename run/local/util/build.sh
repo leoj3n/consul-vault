@@ -12,4 +12,4 @@ else
 fi
 
 print
-"${0:a:h:h}/local/docker-compose.sh" build ${cache} "${service}" "${@}"
+"${0:a:h:h}/docker-compose.sh" build ${cache} "${service}" "${@}"
