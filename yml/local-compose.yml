@@ -25,4 +25,4 @@ services:
       - "8500"
     environment:
       - CONSUL_DATACENTER_NAME=dc1
-      - SERVICE_HOST_NAME=consul-vault
+      - SERVICE_HOST_NAME=consul-vault-service

@@ -74,12 +74,12 @@ preStart() {
 # we've got the whole cluster together.
 #
 health() {
-  if [ _is_set "${IS_DEV}" ]; then
+  if _is_set "${IS_DEV}"; then
     consul info >/dev/null
   else
     if [ "$(consul info | awk '/num_peers/{print$3}')" == 0 ]; then
       _log 'No peers in raft'
-      consul join "${SERVICE_HOST_NAME:-consul-vault}"
+      consul join "${SERVICE_HOST_NAME:-consul-vault-service}"
     fi
   fi
 }

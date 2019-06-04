@@ -385,9 +385,9 @@ check() {
 
     # setup environment file
     if [ ! -f '_env' ]; then
-      echo TRITON_ACCOUNT=${TRITON_ACCOUNT} >> _env
       echo TRITON_DC=${TRITON_DC} >> _env
-      echo VAULT=vault.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
+      echo TRITON_ACCOUNT=${TRITON_ACCOUNT} >> _env
+      echo SERVICE_HOST_NAME=consul-vault.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
       echo >> _env
     else
       echo 'Existing _env file found'
@@ -416,7 +416,9 @@ _docker() {
     docker='docker'
   fi
 
-  echo "${docker} ${@}"
+  cat << EOF >> './docker_call_log'
+${docker} ${@}
+EOF
 
   "${docker}" ${@}
 }
@@ -432,7 +434,9 @@ _docker_compose() {
     compose='docker-compose'
   fi
 
-  echo "${compose} --project-name ${project} --file ${COMPOSE_FILE} ${@}"
+  cat << EOF >> './docker_call_log'
+${compose} --project-name ${project} --file ${COMPOSE_FILE} ${@}
+EOF
 
   "${compose}" --project-name "${project}" --file "${COMPOSE_FILE}" ${@}
 }
@@ -725,4 +729,7 @@ if [ -z $cmd ]; then
     help
     exit
 fi
+
+rm ./docker_call_log
+
 $cmd $@
