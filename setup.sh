@@ -361,31 +361,30 @@ check() {
   }
 
   if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
-    # make sure Docker client is pointed to the same place as the Triton client
     local docker_user=$(_docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
-    local docker_dc=$(echo $DOCKER_HOST | awk -F"/" '{print $3}' | awk -F'.' '{print $1}')
+
+    export TRITON_ACCOUNT=$(triton account get | awk -F": " '/id:/{print $2}')
     export TRITON_USER=$(triton profile get | awk -F": " '/account:/{print $2}')
     export TRITON_DC=$(triton profile get | awk -F"/" '/url:/{print $3}' | awk -F'.' '{print $1}')
-    export TRITON_ACCOUNT=$(triton account get | awk -F": " '/id:/{print $2}')
-    if [ ! "$docker_user" = "$TRITON_USER" ] || [ ! "$docker_dc" = "$TRITON_DC" ]; then
+
+    # make sure Docker client is pointed to the same place as the Triton client
+    if [ ! "${docker_user}" = "${TRITON_USER}" ]; then
       echo
       echo 'Error! The Triton CLI configuration does not match the Docker CLI configuration.'
       echo "Docker user: ${docker_user}"
       echo "Triton user: ${TRITON_USER}"
-      echo "Docker data center: ${docker_dc}"
-      echo "Triton data center: ${TRITON_DC}"
       exit 1
     fi
 
     local triton_cns_enabled=$(triton account get | awk -F": " '/cns/{print $2}')
-    if [ ! "true" == "$triton_cns_enabled" ]; then
+    if [ ! 'true' == "${triton_cns_enabled}" ]; then
       echo
       echo 'Error! Triton CNS is required and not enabled.'
       exit 1
     fi
 
     # setup environment file
-    if [ ! -f "_env" ]; then
+    if [ ! -f '_env' ]; then
       echo TRITON_ACCOUNT=${TRITON_ACCOUNT} >> _env
       echo TRITON_DC=${TRITON_DC} >> _env
       echo VAULT=vault.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
