@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-"${0:a:h}/docker-compose.sh" up --detach "${@}"
+"${0:a:h}/dev-compose.sh" up --detach "${@}"
 
 if ! [[ "${@}" =~ '--build' ]]; then
   print

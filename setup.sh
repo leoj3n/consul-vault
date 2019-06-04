@@ -87,7 +87,7 @@ project_version=0.1
 project=consul-vault
 service=consul-vault
 instance="${project}_${service}"
-COMPOSE_FILE=${COMPOSE_FILE:-docker-compose.yml}
+COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
 # TLS setup paths
 openssl_config=/usr/local/etc/openssl/openssl.cnf

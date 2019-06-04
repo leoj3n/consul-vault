@@ -1,3 +1,3 @@
 #!/usr/bin/env zsh
 
-"${0:a:h}/docker-compose.sh" down "${@}"
+"${0:a:h}/dev-compose.sh" down "${@}"
