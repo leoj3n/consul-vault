@@ -1,11 +1,11 @@
-version: "3.7"
+version: "2.1"
 
 services:
 
   consul-vault:
     image: leoj3n/consul-vault:latest
     restart: always
-    #mem_limit: 128m
+    mem_limit: 128m
     ports:
       - "8200"
       - "8500"

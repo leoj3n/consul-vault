@@ -132,9 +132,9 @@ _copy_chown() {
   local src=$1
   local inst=$2
   local dest=$3
-  docker cp ${src} ${inst}:${dest}
-  docker exec ${inst} chown root:root ${dest}
-  docker exec ${inst} chmod 755 ${dest}
+  _docker cp ${src} ${inst}:${dest}
+  _docker exec ${inst} chown root:root ${dest}
+  _docker exec ${inst} chmod 755 ${dest}
 }
 
 # copy public key file to first instance
@@ -159,7 +159,7 @@ secure() {
 
   if [ -z ${gossipKeyFile} ]; then
     echo 'Gossip key not provided; will be generated at ./secrets/gossip.key'
-    gossipKey=$(docker exec ${instance}_1 consul keygen | tr -d '\r')
+    gossipKey=$(_docker exec ${instance}_1 consul keygen | tr -d '\r')
     echo ${gossipKey} > ./secrets/gossip.key
   else
     gossipKey=$(cat ${gossipKeyFile})
@@ -186,7 +186,7 @@ EOF
   echo "Securing ${instance}_${i}..."
 
   echo ' copying certificates and keys'
-  docker exec "${instance}_${i}" mkdir -p '/etc/ssl/private'
+  _docker exec "${instance}_${i}" mkdir -p '/etc/ssl/private'
   _copy_chown "${ca_cert}" "${instance}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
   _copy_chown "${tls_cert}" "${instance}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
   _copy_chown "${tls_key}" "${instance}_${i}" '/etc/ssl/private/consul-vault.key.pem'
@@ -196,10 +196,10 @@ EOF
   _copy_chown './etc/vault-tls.hcl' "${instance}_${i}" '/etc/vault.hcl'
 
   echo ' updating trusted root certificate (ignore the following warning)'
-  docker exec "${instance}_${i}" update-ca-certificates
+  _docker exec "${instance}_${i}" update-ca-certificates
 
   echo " reloading ${instance}_${i} containerpilot"
-  docker exec "${instance}_${i}" containerpilot -reload
+  _docker exec "${instance}_${i}" containerpilot -reload
   done
 }
 
@@ -272,7 +272,7 @@ init() {
   echo 'before succeeding)...'
 
   until
-    docker exec ${instance}_1 vault operator init \
+    _docker exec ${instance}_1 vault operator init \
       -key-shares=${#KEYS[@]} \
       -key-threshold=${threshold} \
       -pgp-keys="/${keys_arg}" > secrets/vault.keys
@@ -305,7 +305,7 @@ unseal() {
     echo
     bold "* Unsealing ${instance}_$i"
     until
-      docker exec -it ${instance}_$i vault operator unseal
+      _docker exec -it ${instance}_$i vault operator unseal
     do
       sleep 1
     done
@@ -322,9 +322,9 @@ policy() {
 
   _copy_chown "${policyfile}" "${instance}_1" "/tmp/$(basename ${policyfile})"
 
-  docker exec -it ${instance}_1 vault login
+  _docker exec -it ${instance}_1 vault login
 
-  docker exec -it ${instance}_1 \
+  _docker exec -it ${instance}_1 \
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
@@ -333,14 +333,14 @@ engine() {
   local paths=("${@}")
 
   for path in "${paths[@]}"; do
-    docker exec -it "${instance}_1" vault secrets enable -path="${path}" kv
+    _docker exec -it "${instance}_1" vault secrets enable -path="${path}" kv
   done
 }
 
 # Check for correct configuration for running on Triton.
 # Create _env file with CNS name for Consul.
 check() {
-  command -v docker >/dev/null 2>&1 || {
+  command -v _docker >/dev/null 2>&1 || {
     echo
     echo 'Error! Docker is not installed!'
     echo 'See https://docs.joyent.com/public-cloud/api-access/docker'
@@ -362,7 +362,7 @@ check() {
 
   if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
     # make sure Docker client is pointed to the same place as the Triton client
-    local docker_user=$(docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
+    local docker_user=$(_docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
     local docker_dc=$(echo $DOCKER_HOST | awk -F"/" '{print $3}' | awk -F'.' '{print $1}')
     export TRITON_USER=$(triton profile get | awk -F": " '/account:/{print $2}')
     export TRITON_DC=$(triton profile get | awk -F"/" '/url:/{print $3}' | awk -F'.' '{print $1}')
@@ -408,11 +408,41 @@ up() {
   _demo_wait_for_consul
 }
 
+_docker() {
+  local docker
+
+  if [[ "${COMPOSE_FILE##*/}" == 'triton-compose.yml' ]]; then
+    docker='triton-docker'
+  else
+    docker='docker'
+  fi
+
+  echo "${docker} ${@}"
+
+  "${docker}" ${@}
+}
+
+_docker_compose() {
+  local compose
+
+  echo "COMPOSE_FILE = ${COMPOSE_FILE##*/}"
+
+  if [[ "${COMPOSE_FILE##*/}" == 'triton-compose.yml' ]]; then
+    compose='triton-compose'
+  else
+    compose='docker-compose'
+  fi
+
+  echo "${compose} --project-name ${project} --file ${COMPOSE_FILE} ${@}"
+
+  "${compose}" --project-name "${project}" --file "${COMPOSE_FILE}" ${@}
+}
+
 _demo_up() {
   echo
   bold "* Composing cluster of 3 ${service} service instances..."
-  echo "docker-compose --file ${COMPOSE_FILE} up --detach --scale ${service}=3"
-  docker-compose --project-name "${project}" --file "${COMPOSE_FILE}" up --detach --scale "${service}=3"
+  echo "docker-compose up --detach --scale ${service}=3"
+  _docker_compose up --detach --scale "${service}=3"
 }
 
 _demo_secure() {
@@ -426,7 +456,7 @@ _demo_wait_for_consul() {
   echo
   bold '* Waiting for Consul to form raft...'
   until
-    docker exec ${instance}_1 consul info | grep -q "num_peers = 2"
+    _docker exec ${instance}_1 consul info | grep -q "num_peers = 2"
   do
     echo -n '.'
     sleep 1
@@ -665,14 +695,14 @@ demo() {
 
 
 build() {
-  docker build --tag leoj3n/consul-vault .
+  _docker build --tag leoj3n/consul-vault .
 }
 
 ship() {
   local githash=$(git rev-parse --short HEAD)
-  docker tag ${repo}:latest ${repo}:${project_version}-${githash}
-  docker push ${repo}:latest
-  docker push ${repo}:${project_version}-${githash}
+  _docker tag ${repo}:latest ${repo}:${project_version}-${githash}
+  _docker push ${repo}:latest
+  _docker push ${repo}:${project_version}-${githash}
 }
 
 # ---------------------------------------------------
