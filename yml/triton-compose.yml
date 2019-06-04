@@ -13,6 +13,6 @@ services:
       - CONSUL_DATACENTER_NAME=dc1
       - SERVICE_HOST_NAME=consul-vault
     labels:
-      - triton.cns.services=consul
-      - com.docker.swarm.affinities=["container!=~*consul*"]
+      - triton.cns.services=consul-vault
+      - com.docker.swarm.affinities=["container!=~*consul-vault*"]
     network_mode: bridge

@@ -403,7 +403,7 @@ check_triton() {
 }
 
 up() {
-  _demo_up
+  _triton_up
   _demo_wait_for_consul
 }
 
@@ -435,6 +435,13 @@ _docker_compose() {
   echo "${compose} --project-name ${project} --file ${COMPOSE_FILE} ${@}"
 
   "${compose}" --project-name "${project}" --file "${COMPOSE_FILE}" ${@}
+}
+
+_triton_up() {
+  echo
+  bold "* Composing cluster of 3 ${service} service instances on Triton..."
+  _docker_compose up -d
+  _docker_compose scale "${service}=3"
 }
 
 _demo_up() {
