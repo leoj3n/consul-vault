@@ -268,8 +268,7 @@ init() {
     _copy_key "${key}"
   done
 
-  echo 'Attempting to initialize vault (Note: May take as long as 30 seconds/tries '
-  echo 'before succeeding)...'
+  echo 'Attempting to initialize vault (Note: May take as many as 30 attempts)...'
 
   until
     _docker exec ${instance}_1 vault operator init \
