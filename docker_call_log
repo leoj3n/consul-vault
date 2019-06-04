@@ -1,1 +1,52 @@
-aaaaaaaaaaa
+triton-docker exec consulvault_consul-vault-service_1 mkdir -p /etc/ssl/private
+triton-docker cp ./secrets/CA/ca_cert.pem consulvault_consul-vault-service_1:/usr/local/share/ca-certificates/ca_cert.pem
+triton-docker exec consulvault_consul-vault-service_1 chown root:root /usr/local/share/ca-certificates/ca_cert.pem
+triton-docker exec consulvault_consul-vault-service_1 chmod 755 /usr/local/share/ca-certificates/ca_cert.pem
+triton-docker cp ./secrets/consul-vault.cert.pem consulvault_consul-vault-service_1:/etc/ssl/certs/consul-vault.cert.pem
+triton-docker exec consulvault_consul-vault-service_1 chown root:root /etc/ssl/certs/consul-vault.cert.pem
+triton-docker exec consulvault_consul-vault-service_1 chmod 755 /etc/ssl/certs/consul-vault.cert.pem
+triton-docker cp ./secrets/consul-vault.key.pem consulvault_consul-vault-service_1:/etc/ssl/private/consul-vault.key.pem
+triton-docker exec consulvault_consul-vault-service_1 chown root:root /etc/ssl/private/consul-vault.key.pem
+triton-docker exec consulvault_consul-vault-service_1 chmod 755 /etc/ssl/private/consul-vault.key.pem
+triton-docker cp ./etc/consul-tls.hcl consulvault_consul-vault-service_1:/etc/consul/consul.hcl
+triton-docker exec consulvault_consul-vault-service_1 chown root:root /etc/consul/consul.hcl
+triton-docker exec consulvault_consul-vault-service_1 chmod 755 /etc/consul/consul.hcl
+triton-docker cp ./etc/vault-tls.hcl consulvault_consul-vault-service_1:/etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_1 chown root:root /etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_1 chmod 755 /etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_1 update-ca-certificates
+triton-docker exec consulvault_consul-vault-service_1 containerpilot -reload
+triton-docker exec consulvault_consul-vault-service_2 mkdir -p /etc/ssl/private
+triton-docker cp ./secrets/CA/ca_cert.pem consulvault_consul-vault-service_2:/usr/local/share/ca-certificates/ca_cert.pem
+triton-docker exec consulvault_consul-vault-service_2 chown root:root /usr/local/share/ca-certificates/ca_cert.pem
+triton-docker exec consulvault_consul-vault-service_2 chmod 755 /usr/local/share/ca-certificates/ca_cert.pem
+triton-docker cp ./secrets/consul-vault.cert.pem consulvault_consul-vault-service_2:/etc/ssl/certs/consul-vault.cert.pem
+triton-docker exec consulvault_consul-vault-service_2 chown root:root /etc/ssl/certs/consul-vault.cert.pem
+triton-docker exec consulvault_consul-vault-service_2 chmod 755 /etc/ssl/certs/consul-vault.cert.pem
+triton-docker cp ./secrets/consul-vault.key.pem consulvault_consul-vault-service_2:/etc/ssl/private/consul-vault.key.pem
+triton-docker exec consulvault_consul-vault-service_2 chown root:root /etc/ssl/private/consul-vault.key.pem
+triton-docker exec consulvault_consul-vault-service_2 chmod 755 /etc/ssl/private/consul-vault.key.pem
+triton-docker cp ./etc/consul-tls.hcl consulvault_consul-vault-service_2:/etc/consul/consul.hcl
+triton-docker exec consulvault_consul-vault-service_2 chown root:root /etc/consul/consul.hcl
+triton-docker exec consulvault_consul-vault-service_2 chmod 755 /etc/consul/consul.hcl
+triton-docker cp ./etc/vault-tls.hcl consulvault_consul-vault-service_2:/etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_2 chown root:root /etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_2 chmod 755 /etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_2 update-ca-certificates
+triton-docker exec consulvault_consul-vault-service_2 containerpilot -reload
+triton-docker exec consulvault_consul-vault-service_3 mkdir -p /etc/ssl/private
+triton-docker cp ./secrets/CA/ca_cert.pem consulvault_consul-vault-service_3:/usr/local/share/ca-certificates/ca_cert.pem
+triton-docker exec consulvault_consul-vault-service_3 chown root:root /usr/local/share/ca-certificates/ca_cert.pem
+triton-docker exec consulvault_consul-vault-service_3 chmod 755 /usr/local/share/ca-certificates/ca_cert.pem
+triton-docker cp ./secrets/consul-vault.cert.pem consulvault_consul-vault-service_3:/etc/ssl/certs/consul-vault.cert.pem
+triton-docker exec consulvault_consul-vault-service_3 chown root:root /etc/ssl/certs/consul-vault.cert.pem
+triton-docker exec consulvault_consul-vault-service_3 chmod 755 /etc/ssl/certs/consul-vault.cert.pem
+triton-docker cp ./secrets/consul-vault.key.pem consulvault_consul-vault-service_3:/etc/ssl/private/consul-vault.key.pem
+triton-docker exec consulvault_consul-vault-service_3 chown root:root /etc/ssl/private/consul-vault.key.pem
+triton-docker exec consulvault_consul-vault-service_3 chmod 755 /etc/ssl/private/consul-vault.key.pem
+triton-docker cp ./etc/consul-tls.hcl consulvault_consul-vault-service_3:/etc/consul/consul.hcl
+triton-docker exec consulvault_consul-vault-service_3 chown root:root /etc/consul/consul.hcl
+triton-docker exec consulvault_consul-vault-service_3 chmod 755 /etc/consul/consul.hcl
+triton-docker cp ./etc/vault-tls.hcl consulvault_consul-vault-service_3:/etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_3 chown root:root /etc/vault.hcl
+triton-docker exec consulvault_consul-vault-service_3 chmod 755 /etc/vault.hcl

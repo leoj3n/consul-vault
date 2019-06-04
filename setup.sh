@@ -322,7 +322,11 @@ policy() {
 
   _copy_chown "${policyfile}" "${instance}_1" "/tmp/$(basename ${policyfile})"
 
-  _docker exec -it ${instance}_1 vault login
+  until
+    _docker exec -it ${instance}_1 vault login
+  do
+    sleep 1
+  done
 
   _docker exec -it ${instance}_1 \
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
@@ -730,6 +734,6 @@ if [ -z $cmd ]; then
     exit
 fi
 
-rm ./docker_call_log
+[ -f './docker_call_log' ] && rm './docker_call_log'
 
 $cmd $@
