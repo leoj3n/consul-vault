@@ -18,4 +18,4 @@ print '  http://0.0.0.0:8200'
 print
 print 'Vault root token:'
 print
-print "  $(docker exec consulvault_consul-vault_1 cat /root/.vault-token)"
+print "  $(docker exec consulvault_consul-vault-service_1 cat /root/.vault-token)"

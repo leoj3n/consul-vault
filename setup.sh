@@ -85,7 +85,7 @@ EOF
 repo=consul-vault
 project_version=0.1
 project=consulvault
-service=consul-vault
+service=consul-vault-service
 instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 

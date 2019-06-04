@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
 
-  consul-vault:
+  consul-vault-service:
     ports:
       - "8200:8200"
       - "8500:8500"
