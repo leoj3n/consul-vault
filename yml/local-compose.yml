@@ -19,7 +19,7 @@ services:
   # Unless IS_DEV is set, at least three instances are required for quorum.
   consul-vault:
     build: ..
-    image: consul-vault:latest
+    image: leoj3n/consul-vault:latest
     ports:
       - "8200"
       - "8500"
