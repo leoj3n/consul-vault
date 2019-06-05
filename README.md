@@ -8,7 +8,7 @@ For consul-vault usage examples, reference the shell scripts in [`./run/`](#run-
 
 ## ./run/
 
-The scripts in [`./run/`](./run) demonstrate standing up local and remote clusters of consul-vault instances.
+Scripts in [`./run/`](./run) demonstrate standing up local and remote clusters of consul-vault instances.
 
 - [`./run/local/dev/up.sh`](./run/local/dev/up.sh) (local, dev)
   - Brings up a single local docker consul-vault `-dev` instance.
@@ -19,7 +19,7 @@ The scripts in [`./run/`](./run) demonstrate standing up local and remote cluste
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
 
-These scripts are written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
+The scripts are written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
 
 ## How do you use consul-vault in other docker-compose projects?
 
