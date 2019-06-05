@@ -8,7 +8,7 @@ Reference the shell scripts in [`./run/`](#run-scripts) and related compose file
 
 ## Run scripts
 
-These scripts stand up local or remote instances and/or clusters of consul-vault:
+These scripts stand up local or remote instance clusters of consul-vault:
 
 - [`./run/local/dev/up.sh`](./run/local/dev/up.sh)
   - Brings up a single local docker consul-vault `-dev` instance.
