@@ -8,17 +8,15 @@ Reference the shell scripts in [`./run/`](#run-scripts) and related compose file
 
 ## Run scripts
 
-These scripts are written for [zsh](http://zsh.org/).
-
 - [`./run/local/dev/up.sh`](./run/local/dev/up.sh)
   - Brings up a single local docker consul-vault `-dev` instance.
 - [`./run/local/demo/provision.sh`](./run/local/demo/provision.sh)
   - Generates example certs and keys via self-signed CA before using them to stand up a local docker consul-vault cluster scaled to three instances.
 - [`./run/remote/triton/example.sh`](./run/remote/triton/example.sh)
-  - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
+  - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
 
-See all available scripts at [`./run/`](./run).
+These scripts are written for [zsh](http://zsh.org/). See all available scripts at [`./run/`](./run).
 
 ## How to use in other docker-compose projects?
 
