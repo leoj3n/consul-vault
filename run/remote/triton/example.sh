@@ -7,7 +7,7 @@ provision() {
   "${dir}/provision.sh" "${@}"
 }
 
-print 'Begin remote Triton provisioning using example data in ./secrets' && \
+print 'Triton provisioning using example data in ./secrets' && \
   provision check && \
   provision up && \
   provision secure \
