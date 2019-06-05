@@ -23,7 +23,9 @@ Scripts are written for [zsh](http://zsh.org/); see all available scripts at [`.
 
 ### Existing docker-compose project
 
-There are at least three methods of coupling consul-vault to an existing docker-compose project:
+There are at least three methods of coupling consul-vault to an existing docker-compose project.
+
+Which one is best for you will depend on your needs:
 
 - `network:`
   - Allows your project to communicate with consul-vault across the same local docker host network.
