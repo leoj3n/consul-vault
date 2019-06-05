@@ -4,9 +4,9 @@ Implementation of the Autopilot Pattern for HashiCorp's Consul and Vault.
 
 Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) or [`triton`](https://github.com/joyent/node-triton#installation), and uses the latest releases of [`consul`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L14), [`vault`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L24), and [`containerpilot`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L5).
 
-Shell scripts in [`./run`](#run-scripts) and compose files in [`./yml`](./yml) help to exemplify and simplify interacting with consul-vault.
+Shell scripts in [`./run/`](#run-scripts) and compose files in [`./yml`](./yml) help to exemplify and simplify interacting with consul-vault.
 
-## `./run` scripts
+## `./run/` scripts
 
 These scripts are written for [zsh](http://zsh.org/).
 
@@ -18,7 +18,7 @@ These scripts are written for [zsh](http://zsh.org/).
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
 
-See all available scripts at [`./run`](./run).
+See all available scripts at [`./run/`](./run).
 
 ## How to use in another docker project
 
