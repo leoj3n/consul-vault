@@ -32,7 +32,7 @@ There are at least three methods of coupling consul-vault to an existing docker-
 - `IS_DEV=1`
   - Pulls in consul-vault from the built docker image.
     - Creates a single `-dev` mode instance.
-    - Requires a built image (perhaps from docker hub).
+    - Requires a built image (like from docker hub).
 - `--file`
   - Pulls in consul-vault from the cloned repo directory.
     - Creates a single `-dev` mode instance.
