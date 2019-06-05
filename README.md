@@ -8,14 +8,17 @@ Works with the latest versions of [`docker`](https://hub.docker.com/editions/com
 
 These scripts are written for [`zsh`](http://zsh.org/).
 
-- [`./run/local/dev/up.sh`](run/local/dev/up.sh) brings up a single local docker consul-vault `-dev` instance.
-- [`./run/local/demo/provision.sh`](run/local/demo/provision.sh) generates example certs and keys via self-signed CA before using them to stand up a local docker consul-vault cluster scaled to three instances.
-- [`./run/remote/triton/example.sh`](run/remote/triton/example.sh) uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
+- [`./run/local/dev/up.sh`](run/local/dev/up.sh)
+  - Brings up a single local docker consul-vault `-dev` instance.
+- [`./run/local/demo/provision.sh`](run/local/demo/provision.sh)
+  - Generates example certs and keys via self-signed CA before using them to stand up a local docker consul-vault cluster scaled to three instances.
+- [`./run/remote/triton/example.sh`](run/remote/triton/example.sh)
+  - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
 
 ## Including `consul-vault` in another docker project
 
-There are three ways of getting vault (plus consul) into another docker-compose project.
+There are three ways of getting vault (plus consul) into another docker-compose project: `network:`, `IS_DEV=1`, and `--file`.
 
 ### `network:`
 
