@@ -387,23 +387,23 @@ check() {
   #
   #   eval "$(triton env --docker us-sw-1)"
   #
-  # Your datacenter might be different than "us-sw-1".
+  # Note that your profile name might be different than "us-sw-1".
   #
-  # More information:
-  #
-  #   https://github.com/joyent/node-triton#installation
-  #
-  # Also, if you are having to enter your password over and over:
+  # If you are having to enter your password over and over:
   #
   #   Go to <https://my.joyent.com/main/#!/account> and "Create SSH Key" and
   #   add the downloaded key to your ssh-agent. Now, create a new profile:
   #
   #     triton profile create
   #
-  #  Make this profile uses the downloaded SSH key and set this as the current
-  #  profile:
+  #  Select the downloaded SSH key fingerprint when prompted for keyId, then
+  #  set the completed profile as the current profile for triton:
   #
   #    triton profile set-current us-sw-1
+  #
+  # More information about node-triton and `triton profile create`:
+  #
+  #   https://github.com/joyent/node-triton#installation
   #
   if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
     local docker_user=$(_docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
