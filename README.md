@@ -38,7 +38,7 @@ There are at least three methods of coupling consul-vault to an existing docker-
     - Creates a single `-dev` mode instance.
     - Requires cloning the `consul-vault` repo.
 
-### `network:`
+#### `network:`
 
 If your development process would be aided by persisting consul and vault data to a backend locally, or if you are wanting to test out consul+vault clustering locally, or perhaps (if for some reason) your app needs to connect to consul and vault over TLS when locally under development, then consider use the `networks:` method. However, the `IS_DEV=1` method might be better.
 
@@ -63,7 +63,7 @@ You could save this as `net-compose.yml` and run a docker command like:
 $ docker-compose --project-name 'myapp' --file 'local-compose.yml' --file 'net-compose.yml' up --detach
 ```
 
-### `IS_DEV=1`
+#### `IS_DEV=1`
 
 If you need a simple, single-instance dev setup for your app to connect to for development purposes, then it is probably more lightweight to use the image method with `IS_DEV=1` in your `local-compose.yml`. This also might have the benefit of a clean consul and vault database every time you start your app cluster, which makes your app development process more reproducible.
 
@@ -93,7 +93,7 @@ You could save this as `image-compose.yml` and run a docker command like:
 $ docker-compose --project-name 'myapp' --file 'local-compose.yml' --file 'image-compose.yml' up --detach
 ```
 
-### `--file`
+#### `--file`
 
 Similar to the `IS_DEV=1` method, a final way you might bring consul-vault in `-dev` mode into another docker project that contains your app code is by cloning the consul-vault repo and specifying the `--file` locations of `local-compose.yml` and `dev-compose.yml` within the cloned consul-vault directory.
 
