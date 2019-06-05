@@ -27,18 +27,20 @@ There are at least three methods of coupling consul-vault to an existing docker-
 
 Which one is best for you will depend on your needs:
 
-- `network:`
+- [`network:`](#network)
   - Allows your project to communicate with consul-vault across the same local docker host network.
     - Creates a fully functioning cluster of three instances.
     - Requires cloning the `consul-vault` repo.
-- `IS_DEV=1`
+- [`IS_DEV=1`](#is_dev1)
   - Pulls in consul-vault from the built docker image.
     - Creates a single `-dev` mode instance.
     - Requires a built image (like from docker hub).
-- `--file`
+- [`--file`](#--file)
   - Pulls in consul-vault from the cloned repo directory.
     - Creates a single `-dev` mode instance.
     - Requires cloning the `consul-vault` repo.
+
+These will be explained in more detail in the following sections.
 
 #### `network:`
 
