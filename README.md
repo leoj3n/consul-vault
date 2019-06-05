@@ -8,7 +8,7 @@ For consul-vault usage examples, reference the shell scripts in [`./run/`](#run-
 
 ## ./run/
 
-These scripts demonstrate standing up local and remote clusters of consul-vault instances:
+The scripts in [`./run/`](./run) demonstrate standing up local and remote clusters of consul-vault instances.
 
 - [`./run/local/dev/up.sh`](./run/local/dev/up.sh) (local, dev)
   - Brings up a single local docker consul-vault `-dev` instance.
