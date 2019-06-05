@@ -2,7 +2,9 @@
 
 Implementation of the Autopilot Pattern for HashiCorp's Consul and Vault.
 
-Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) and [`triton`](https://github.com/joyent/node-triton#installation), and uses the latest releases of [`consul`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L14), [`vault`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L24), and [`containerpilot`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L5). Also, shell scripts in [`./run`](#run-scripts) and compose files in [`./yml`](./yml) help to exemplify and simplify CLI usage.
+Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) and [`triton`](https://github.com/joyent/node-triton#installation), and uses the latest releases of [`consul`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L14), [`vault`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L24), and [`containerpilot`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L5).
+
+Shell scripts in [`./run`](#run-scripts) and compose files in [`./yml`](./yml) help to exemplify and simplify commands for interacting with consul-vault.
 
 ## `./run` scripts
 
