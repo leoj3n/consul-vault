@@ -18,7 +18,7 @@ When run locally for testing, we don't have access to Triton CNS. The `local-com
 1. [Get a Joyent account](https://my.joyent.com/landing/signup/) and [add your SSH key](https://docs.joyent.com/public-cloud/getting-started).
 1. Install the [Docker Toolbox](https://docs.docker.com/installation/mac/) (including `docker` and `docker-compose`) on your laptop or other environment, as well as the [Joyent Triton CLI](https://www.joyent.com/blog/introducing-the-triton-command-line-tool) (`triton` replaces our old `sdc-*` CLI tools).
 
-Check that everything is configured correctly by changing to the `examples/triton` directory and executing `./setup.sh`. This will check that your environment is setup correctly and will create an `_env` file that includes injecting an environment variable for a service name for Consul in Triton CNS. We'll use this CNS name to bootstrap the cluster.
+Check that everything is configured correctly by changing to the `examples/triton` directory and executing `./provision.sh`. This will check that your environment is setup correctly and will create an `_env` file that includes injecting an environment variable for a service name for Consul in Triton CNS. We'll use this CNS name to bootstrap the cluster.
 
 ```bash
 $ docker-compose up -d
@@ -231,14 +231,14 @@ Vault elects a primary via locks in Consul. If the primary fails, a new node wil
 
 ## Run the demo!
 
-This repo provides a tool (`./setup.sh`) to launch and manage the Vault cluster. You'll need the following to get started:
+This repo provides a tool (`./provision.sh`) to launch and manage the Vault cluster. You'll need the following to get started:
 
 1. [Get a Joyent account](https://my.joyent.com/landing/signup/) and [add your SSH key](https://docs.joyent.com/public-cloud/getting-started).
 1. Install the [Docker Toolbox](https://docs.docker.com/installation/mac/) (including `docker` and `docker-compose`) on your laptop or other environment, as well as the [Joyent Triton CLI](https://www.joyent.com/blog/introducing-the-triton-command-line-tool).
 
 If you want to see how a completed stack looks, try the demo first.
 
-**`setup.sh demo`:** Runs a demonstration of the entire stack on Triton, creating a 3-node cluster with RPC over TLS. The demo includes initializing the Vault and unsealing it with PGP keys. You can either provide the demo with PGP keys and TLS certificates or allow the script to generate them for you. Parameters:
+**`provision.sh demo`:** Runs a demonstration of the entire stack on Triton, creating a 3-node cluster with RPC over TLS. The demo includes initializing the Vault and unsealing it with PGP keys. You can either provide the demo with PGP keys and TLS certificates or allow the script to generate them for you. Parameters:
 
 	-p, --pgp-key        use this PGP key in lieu of creating a new one
 	-k, --tls-key        use this TLS key file in lieu of creating a CA and cert
@@ -246,7 +246,7 @@ If you want to see how a completed stack looks, try the demo first.
 	-f, --compose-file   use this Docker Compose manifest
 	-o, --openssl-conf   use this OpenSSL config file
 
-**`setup.sh demo clean`:** Cleans up the demo PGP keys and CA.
+**`provision.sh demo clean`:** Cleans up the demo PGP keys and CA.
 
 The Vault cluster runs as Docker containers on Triton, so you can use your Docker client and Compose to explore the cluster further.
 
@@ -287,11 +287,11 @@ Success! Data written to: secret/hello
 
 Once you've seen the demo, you'll want to run the stack as you will in production.
 
-**`setup.sh check`:** Checks that your Triton and Docker environment is sane and configures an environment file `_env` with a CNS record for Consul. We'll use this CNS name to bootstrap the Consul cluster.
+**`provision.sh check`:** Checks that your Triton and Docker environment is sane and configures an environment file `_env` with a CNS record for Consul. We'll use this CNS name to bootstrap the Consul cluster.
 
-**`setup.sh up`:** Starts the Vault cluster via Docker Compose and waits for all instances to be up. Once instances are up, it will poll Consul's status to ensure the raft has been created.
+**`provision.sh up`:** Starts the Vault cluster via Docker Compose and waits for all instances to be up. Once instances are up, it will poll Consul's status to ensure the raft has been created.
 
-**`setup.sh secure`:** Generates a token for gossip encryption and uploads the TLS cert for RPC encryption to the Consul cluster, updates the Consul configuration file to use these keys, and SIGHUPs all the instances. This should be run before the Vault is initialized and unsealed. Use the following options:
+**`provision.sh secure`:** Generates a token for gossip encryption and uploads the TLS cert for RPC encryption to the Consul cluster, updates the Consul configuration file to use these keys, and SIGHUPs all the instances. This should be run before the Vault is initialized and unsealed. Use the following options:
 
 	--tls-key/-k <val>:
 		The file containing the TLS key (in PEM format) used to encrypt RPC.
@@ -304,7 +304,7 @@ Once you've seen the demo, you'll want to run the stack as you will in productio
 		cert. If the cert is self-signed or signed by a CA found in the
 		container's certificate chain, this argument may be omitted.
 
-**`setup.sh init`:** Initializes a started Vault cluster. Creates encrypted keyfiles for each operator's public key, which should be redistributed back to operators out-of-band. Use the following options:
+**`provision.sh init`:** Initializes a started Vault cluster. Creates encrypted keyfiles for each operator's public key, which should be redistributed back to operators out-of-band. Use the following options:
 
 	--keys/-k "<val>,<val>":
 		List of public keys used to initialize the vault. These keys
@@ -313,6 +313,6 @@ Once you've seen the demo, you'll want to run the stack as you will in productio
 		Optional number of keys required to unseal the vault. Defaults
 		to 1 if a single --keys argument was provided, otherwise 2.
 
-**`setup.sh unseal [keyfile]`:** Unseals a Vault with the provided operator's key. Requires access to all Vault nodes via `docker exec`. A number of operator keys equal to the `--threshold` parameter (above) must be used to unseal the Vault.
+**`provision.sh unseal [keyfile]`:** Unseals a Vault with the provided operator's key. Requires access to all Vault nodes via `docker exec`. A number of operator keys equal to the `--threshold` parameter (above) must be used to unseal the Vault.
 
-**`setup.sh policy [policyname] [policyfile]`:** Adds an ACL to the Vault cluster by uploading a policy HCL file and writing it via `vault policy-write`.
+**`provision.sh policy [policyname] [policyfile]`:** Adds an ACL to the Vault cluster by uploading a policy HCL file and writing it via `vault policy-write`.

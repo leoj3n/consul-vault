@@ -123,7 +123,7 @@ fi
 
 echo "profiles: $@"
 
-# invoke ./setup.sh once per profile
+# invoke ./provision.sh once per profile
 for profile in "$@"
 do
     echo "Temporarily switching profile: $profile"

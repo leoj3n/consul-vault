@@ -3,7 +3,7 @@ set -e -o pipefail
 
 help() {
     echo
-    echo 'Usage ./setup.sh'
+    echo 'Usage ./provision.sh'
     echo
     echo 'Checks that your Triton and Docker environment is sane and configures'
     echo 'an environment file to use.'

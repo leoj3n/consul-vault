@@ -3,18 +3,18 @@ set -e -o pipefail
 
 help() {
 cat << EOF
-Usage: ./setup.sh [options] <command>
+Usage: ./provision.sh [options] <command>
 --------------------------------------------------------------------------------
-setup.sh check:
+provision.sh check:
 	Checks that your Triton and Docker environment is sane and configures an
 	environment file with a CNS record for Consul.
 
-setup.sh up:
+provision.sh up:
 	Starts a 3-node Vault cluster via Docker Compose and waits for all instances
 	to be up. Once instances are up, it will poll Consul's status to ensure the
 	raft has been created.
 
-setup.sh secure:
+provision.sh secure:
 	Generates a token for gossip encryption and uploads the TLS cert for RPC
 	encryption to the Consul cluster, updates the Consul configuration file to
 	use these keys, and SIGHUPs all the instances. This should be run before the
@@ -35,7 +35,7 @@ setup.sh secure:
         The file containing a Consul gossip key. If the argument is omitted,
         one will be generated.
 
-setup.sh init:
+provision.sh init:
 	Initializes a started Vault cluster. Creates encrypted keyfiles for each
 	operator's public key, which should be redistributed back to operators
 	out-of-band. Use the following options:
@@ -48,21 +48,21 @@ setup.sh init:
 		Optional number of keys required to unseal the vault. Defaults
 		to 1 if a single --keys argument was provided, otherwise 2.
 
-setup.sh unseal [keyfile]:
+provision.sh unseal [keyfile]:
 	Unseals a Vault with the provided operator's key. Requires access to all
 	Vault nodes via 'docker exec'. A number of operator keys equal to the
 	'--threshold' parameter (above) must be used to unseal the Vault.
 
-setup.sh policy [policyname] [policyfile]:
+provision.sh policy [policyname] [policyfile]:
 	Adds an ACL to the Vault cluster by uploading a policy HCL file and writing
 	it via 'vault policy-write'.
 
-setup.sh engine path [path]:
+provision.sh engine path [path]:
   Enable the "kv" secrets engine at passed path(s).
 
 --------------------------------------------------------------------------------
 
-setup.sh demo:
+provision.sh demo:
 	Runs a demonstration of the entire stack on Triton, creating a 3-node
 	cluster with RPC over TLS. The demo includes initializing the Vault and
 	unsealing it with PGP keys. You can either provide the demo with PGP keys
@@ -75,7 +75,7 @@ setup.sh demo:
 	-f, --compose-file   use this Docker Compose manifest
 	-o, --openssl-conf   use this OpenSSL config file
 
-setup.sh demo clean:
+provision.sh demo clean:
 	Cleans up the demo PGP keys and CA.
 
 EOF
@@ -85,7 +85,7 @@ EOF
 repo=consul-vault
 project_version=0.1
 project=consulvault
-service=consul-vault-service
+service=consul-vault-serv
 instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
@@ -183,24 +183,31 @@ encrypt = "${gossipKey}"
 EOF
 
   for i in {1..3}; do
-  echo "Securing ${instance}_${i}..."
+    echo "Securing ${instance}_${i}..."
 
-  echo ' copying certificates and keys'
-  _docker exec "${instance}_${i}" mkdir -p '/etc/ssl/private'
-  _copy_chown "${ca_cert}" "${instance}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
-  _copy_chown "${tls_cert}" "${instance}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
-  _copy_chown "${tls_key}" "${instance}_${i}" '/etc/ssl/private/consul-vault.key.pem'
+    echo ' copying certificates and keys'
+    _docker exec "${instance}_${i}" mkdir -p '/etc/ssl/private'
+    _copy_chown "${ca_cert}" "${instance}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
+    _copy_chown "${tls_cert}" "${instance}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
+    _copy_chown "${tls_key}" "${instance}_${i}" '/etc/ssl/private/consul-vault.key.pem'
 
-  echo ' copying Consul and Vault configuration for TLS'
-  _copy_chown './etc/consul-tls.hcl' "${instance}_${i}" '/etc/consul/consul.hcl'
-  _copy_chown './etc/vault-tls.hcl' "${instance}_${i}" '/etc/vault.hcl'
+    echo ' copying Consul and Vault configuration for TLS'
+    _copy_chown './etc/consul-tls.hcl' "${instance}_${i}" '/etc/consul/consul.hcl'
+    _copy_chown './etc/vault-tls.hcl' "${instance}_${i}" '/etc/vault.hcl'
 
-  echo ' updating trusted root certificate (ignore the following warning)'
-  _docker exec "${instance}_${i}" update-ca-certificates
-
-  echo " reloading ${instance}_${i} containerpilot"
-  _docker exec "${instance}_${i}" containerpilot -reload
+    echo ' updating trusted root certificate (ignore the following warning)'
+    _docker exec "${instance}_${i}" update-ca-certificates
   done
+
+  if [[ "${COMPOSE_FILE##*/}" == 'triton-compose.yml' ]]; then
+    echo 'Restarting cluster with new configuration'
+    _docker_compose restart "${service}"
+  else
+    for i in {1..3}; do
+      echo " reloading ${instance}_${i} containerpilot"
+      _docker exec "${instance}_${i}" containerpilot -reload
+    done
+  fi
 }
 
 # ensure that the user has provided public key(s) and that a valid threshold
@@ -268,21 +275,30 @@ init() {
     _copy_key "${key}"
   done
 
-  echo 'Attempting to initialize vault (Note: May take as many as 30 attempts)...'
+  echo 'Attempting to initialize vault (Note: Local may take 30 attempts)...'
 
+  already_initialized='no'
   until
     _docker exec ${instance}_1 vault operator init \
       -key-shares=${#KEYS[@]} \
       -key-threshold=${threshold} \
       -pgp-keys="/${keys_arg}" > secrets/vault.keys
+
+    if (( $? == 2 )); then
+      already_initialized='yes'
+      break
+    fi
   do
     sleep 1
   done
 
   echo 'Vault initialized.'
-
   echo
-  _split_encrypted_keys ${KEYS[@]}
+
+  if [[ ${already_initialized} == 'no' ]]; then
+    _split_encrypted_keys ${KEYS[@]}
+  fi
+
   _print_root_token
   echo 'Distribute encrypted key files to operators for unsealing.'
 }
@@ -363,6 +379,29 @@ check() {
     exit 1
   }
 
+  #
+  # To get triton-docker passing this test, run:
+  #
+  #   eval "$(triton env --docker us-sw-1)"
+  #
+  # Your datacenter might be different than "us-sw-1".
+  #
+  # More information:
+  #
+  #   https://github.com/joyent/node-triton#installation
+  #
+  # Also, if you are having to enter your password over and over:
+  #
+  #   Go to <https://my.joyent.com/main/#!/account> and "Create SSH Key" and
+  #   add the downloaded key to your ssh-agent. Now, create a new profile:
+  #
+  #     triton profile create
+  #
+  #  Make this profile uses the downloaded SSH key and set this as the current
+  #  profile:
+  #
+  #    triton profile set-current us-sw-1
+  #
   if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
     local docker_user=$(_docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
 
@@ -401,7 +440,7 @@ check() {
 check_triton() {
   echo
   bold '* Checking your setup...'
-  echo './setup.sh check'
+  echo './provision.sh check'
   check
 }
 
@@ -447,8 +486,7 @@ EOF
 _triton_up() {
   echo
   bold "* Composing cluster of 3 ${service} service instances on Triton..."
-  _docker_compose up -d
-  _docker_compose scale "${service}=3"
+  _docker_compose up -d && _docker_compose scale "${service}=3"
 }
 
 _demo_up() {
@@ -461,7 +499,7 @@ _demo_up() {
 _demo_secure() {
   echo
   bold '* Encrypting Consul gossip and RPC'
-  echo "./setup.sh secure -k ${tls_key} -c ${tls_cert} -a ${ca_cert}"
+  echo "./provision.sh secure -k ${tls_key} -c ${tls_cert} -a ${ca_cert}"
   secure -k ${tls_key} -c ${tls_cert} -a ${ca_cert}
 }
 
@@ -637,9 +675,9 @@ _demo_init() {
   echo
   bold '* Initializing the vault with your PGP key. If you had multiple';
   bold '  keys you would pass these into the setup script as follows:'
-  echo "  ./setup.sh init -k 'mykey1.asc,mykey2.asc' -t 2"
+  echo '  ./provision.sh init -k 'mykey1.asc,mykey2.asc' -t 2'
   echo
-  echo "./setup.sh init -k ${PGP_KEYFILE} -t 1"
+  echo "./provision.sh init -k ${PGP_KEYFILE} -t 1"
   init -k "${PGP_KEYFILE}" -t 1
 }
 
@@ -647,9 +685,9 @@ _demo_unseal() {
   echo
   bold '* Unsealing the vault with your PGP key. If you had multiple keys,';
   bold '  each operator would unseal the vault with their own key as follows:'
-  echo '  ./setup.sh unseal ./secrets/mykey1.asc.key'
+  echo '  ./provision.sh unseal ./secrets/mykey1.asc.key'
   echo
-  echo "./setup.sh unseal ${PGP_KEYFILE}.key"
+  echo "./provision.sh unseal ${PGP_KEYFILE}.key"
   unseal "./secrets/${PGP_KEYFILE}.key"
 }
 
@@ -658,7 +696,7 @@ _demo_policy() {
   bold '* Adding an example ACL policy. Use the token you received'
   bold '  previously when prompted.'
   echo
-  echo "./setup.sh policy secret ./policies/example.hcl"
+  echo './provision.sh policy secret ./policies/example.hcl'
   policy 'secret' './policies/example.hcl'
 }
 
@@ -666,7 +704,7 @@ _demo_engine() {
   echo
   bold '* Enabling the "kv" secrets engine at the secret/ path.'
   echo
-  echo "./setup.sh engine secret/"
+  echo './provision.sh engine secret/'
   engine 'secret/'
 }
 

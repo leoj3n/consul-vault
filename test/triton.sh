@@ -163,7 +163,7 @@ profile() {
     env | grep SDC
     env | grep TRITON
 
-    bash /src/setup.sh
+    bash /src/provision.sh
 }
 
 test-rejoin-raft() {
