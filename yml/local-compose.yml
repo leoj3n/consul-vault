@@ -2,21 +2,17 @@ version: "3.7"
 
 services:
 
+  #
   # Service definition for a consul-vault cluster.
   #
-  # For local development:
-  #   
-  #   docker-compose --file local-compose.yml up --detach --scale ${service}=3
+  # Docker DNS will consistently assume the host name of "consul-vault-service"
+  # for this service definition.
   #
-  # The service uses the user-defined network and internal DNS for the host name
-  # "consul-vault".
-  #
-  # Instances use the Docker DNS address of the service (passed in via the
-  # SERVICE_HOST_NAME env var) to find each other and bootstrap the cluster.
-  #
-  # Note:
+  # Instances use this Docker DNS host name of the service (passed in as the
+  # $SERVICE_HOST_NAME env var) to find each other and bootstrap the cluster.
   #
   # Unless IS_DEV is set, at least three instances are required for quorum.
+  # 
   consul-vault-service:
     build: ..
     image: leoj3n/consul-vault:latest
