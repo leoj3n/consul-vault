@@ -2,4 +2,4 @@
 
 export COMPOSE_FILE='yml/triton-compose.yml'
 
-./provision.sh ${@}
+./provision.sh "${@}"
