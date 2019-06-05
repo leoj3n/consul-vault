@@ -19,24 +19,24 @@ Run these scripts to demonstrate provisioning both local and remote clusters of 
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
   - These are the same commands you would run with real keys and certs for production.
 
-Scripts written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
+Scripts are written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
 
 ### docker-compose
 
-There are at least three varying methods of using consul-vault with your docker-compose project, depending on what you need:
+There are at least three methods of coupling consul-vault to an existing docker-compose project:
 
 - `network:`
-  - Creates a fully functioning cluster of three instances.
-  - Requires cloning the `consul-vault` repo.
   - Allows your project to communicate with consul-vault across the same local docker host network.
+    - Creates a fully functioning cluster of three instances.
+    - Requires cloning the `consul-vault` repo.
 - `IS_DEV=1`
-  - Creates a single `-dev` mode instance.
-  - Requires a built image (perhaps from docker hub).
   - Pulls in consul-vault from the built docker image.
+    - Creates a single `-dev` mode instance.
+    - Requires a built image (perhaps from docker hub).
 - `--file`
-  - Creates a single `-dev` mode instance.
-  - Requires cloning the `consul-vault` repo.
   - Pulls in consul-vault from the cloned repo directory.
+    - Creates a single `-dev` mode instance.
+    - Requires cloning the `consul-vault` repo.
 
 ### `network:`
 
