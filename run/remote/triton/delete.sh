@@ -1,1 +1,1 @@
-triton instance delete consulvault_consul-vault-serv_1 consulvault_consul-vault-serv_2 consulvault_consul-vault-serv_3
+triton instance delete consulvault_consul-vault-service_1 consulvault_consul-vault-service_2 consulvault_consul-vault-service_3

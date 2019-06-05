@@ -85,7 +85,7 @@ EOF
 repo=consul-vault
 project_version=0.1
 project=consulvault
-service=consul-vault-serv
+service=consul-vault-service
 instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
@@ -258,6 +258,8 @@ _print_root_token() {
 #
 # The first key will be used in unseal(), so it should be your own key.
 init() {
+  local already_initialized vault_stdout
+
   while true; do
     case $1 in
       -k | --keys ) keys_arg=$2; shift 2;;
@@ -275,31 +277,32 @@ init() {
     _copy_key "${key}"
   done
 
-  echo 'Attempting to initialize vault (Note: Local may take 30 seconds before up)...'
+  echo 'Attempting to initialize vault (local may take up to 30 seconds before succeeding)...'
 
   already_initialized='no'
+
   until
-    _docker exec ${instance}_1 vault operator init \
+    vault_stdout="$(2>&1 _docker exec ${instance}_1 vault operator init \
       -key-shares=${#KEYS[@]} \
       -key-threshold=${threshold} \
-      -pgp-keys="/${keys_arg}" > secrets/vault.keys
-
-    if (( $? == 2 )); then
+      -pgp-keys="/${keys_arg}" > secrets/vault.keys)"
+  do
+    if [[ "${vault_stdout}" =~ 'already' ]]; then
       already_initialized='yes'
       break
     fi
-  do
+
     sleep 1
   done
 
-  echo 'Vault initialized.'
-  echo
-
   if [[ ${already_initialized} == 'no' ]]; then
+    echo 'Vault initialized.'
+    echo
     _split_encrypted_keys ${KEYS[@]}
   fi
 
   _print_root_token
+
   echo 'Distribute encrypted key files to operators for unsealing.'
 }
 
