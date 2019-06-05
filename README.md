@@ -2,9 +2,7 @@
 
 Implementation of the Autopilot Pattern for HashiCorp's Consul and Vault.
 
-More information:
-
-https://github.com/autopilotpattern/vault/issues/7
+More information: https://github.com/autopilotpattern/vault/issues/7
 
 ## `./run` scripts
 
