@@ -1,1 +1,5 @@
-triton instance delete consulvault_consul-vault-service_1 consulvault_consul-vault-service_2 consulvault_consul-vault-service_3
+#!/usr/bin/env zsh
+
+for i in {1..3}; do
+  triton instance delete consulvault_consul-vault-service_${i}
+done
