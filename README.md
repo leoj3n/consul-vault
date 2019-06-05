@@ -15,7 +15,7 @@ Scripts in [`./run/`](./run) demonstrate provisioning both local and remote clus
 - [`./run/local/demo/provision.sh`](./run/local/demo/provision.sh) (local, non-dev)
   - Generates example certs and keys via self-signed CA before using them to stand up a local docker consul-vault cluster scaled to three instances.
 - [`./run/remote/triton/example.sh`](./run/remote/triton/example.sh) (remote, non-dev)
-  - You would run these same commands with real data for production (feel free to copy-paste).
+  - These are the same commands you would run with real keys and certs for production.
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
 
