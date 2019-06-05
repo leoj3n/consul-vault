@@ -4,7 +4,7 @@ Implementation of the [Autopilot Pattern](http://autopilotpattern.io/) for Hashi
 
 Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) or [`triton`](https://github.com/joyent/node-triton#installation). Uses the latest [`consul`](https://www.consul.io/), [`vault`](https://www.vaultproject.io/), and [`containerpilot`](https://www.joyent.com/containerpilot).
 
-See shell scripts in [`./run/`](#run-scripts) and compose files in [`./yml/`](./yml) to understand interacting with consul-vault.
+Reference the shell scripts in [`./run/`](#run-scripts) and compose files in [`./yml/`](./yml) to understand how to use consul-vault.
 
 ## Run scripts
 
