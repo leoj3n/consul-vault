@@ -6,7 +6,7 @@ Works with the latest versions of [`docker`](https://hub.docker.com/editions/com
 
 ## `./run` scripts
 
-These scripts are written for [`zsh`](http://zsh.org/).
+These scripts are written for [zsh](http://zsh.org/).
 
 - [`./run/local/dev/up.sh`](run/local/dev/up.sh)
   - Brings up a single local docker consul-vault `-dev` instance.
@@ -16,7 +16,7 @@ These scripts are written for [`zsh`](http://zsh.org/).
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
 
-See all available scripts at [./run](./run).
+See all available scripts at [`./run`](./run).
 
 ## How to use in another docker project
 
