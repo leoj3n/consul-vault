@@ -90,10 +90,12 @@ $ docker-compose --project-name 'myapp' --file 'local-compose.yml' --file 'image
 
 ### `--file`
 
-Similar to the `IS_DEV=1` method, a final way you might bring consul-vault in `-dev` mode into another docker project that perhaps contains your app code is by cloning the consul-vault repo and specifying the `--file` locations of `local-compose.yml` and `dev-compose.yml` within the cloned consul-vault directory.
+Similar to the `IS_DEV=1` method, a final way you might bring consul-vault in `-dev` mode into another docker project that contains your app code is by cloning the consul-vault repo and specifying the `--file` locations of `local-compose.yml` and `dev-compose.yml` within the cloned consul-vault directory.
 
 For example, you could run a command like:
 
 ```console
 $ docker-compose --project-name 'myapp' --file 'local-compose.yml' --file '../consul-vault/yml/local-compose.yml' --file '../consul-vault/yml/dev-compose.yml' up --detach
 ```
+
+Where `../consul-vault/yml/dev-compose.yml` does the setting of `IS_DEV=1`, etc.
