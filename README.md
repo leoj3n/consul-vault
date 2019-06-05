@@ -10,11 +10,11 @@ For consul-vault usage examples, reference the shell scripts in [`./run/`](#run-
 
 These scripts stand up local and remote clusters of consul-vault instances:
 
-- [`./run/local/dev/up.sh`](./run/local/dev/up.sh)
+- [`./run/local/dev/up.sh`](./run/local/dev/up.sh) (local, dev)
   - Brings up a single local docker consul-vault `-dev` instance.
-- [`./run/local/demo/provision.sh`](./run/local/demo/provision.sh)
+- [`./run/local/demo/provision.sh`](./run/local/demo/provision.sh) (local, non-dev)
   - Generates example certs and keys via self-signed CA before using them to stand up a local docker consul-vault cluster scaled to three instances.
-- [`./run/remote/triton/example.sh`](./run/remote/triton/example.sh)
+- [`./run/remote/triton/example.sh`](./run/remote/triton/example.sh) (remote, non-dev)
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
 
