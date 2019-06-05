@@ -20,7 +20,7 @@ These scripts are written for [zsh](http://zsh.org/).
 
 See all available scripts at [`./run/`](./run).
 
-## How to use in another docker project
+## How to use in other docker-compose projects
 
 There are three methods of including consul-vault in another docker-compose project:
 
