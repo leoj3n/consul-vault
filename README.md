@@ -47,10 +47,10 @@ version: "3.7"
 networks:
   default:
     external:
-      name: consul-vault_default
+      name: consulvault_default
 ```
 
-The name of the other project is `consul-vault`, thus the network is called `consul-vault_default` thanks to docker's standardized naming conventions for container instances.
+The directory name of the "other project" is `consul-vault`, thus by default the network would be called `consul-vault_default` thanks to docker's standardized naming conventions for container instances, however we set the docker `--project-name` to `consulvault` because of a problem where Triton strips dashes out of container instance names in the cloud, so the network name is actually `consulvault_default`.
 
 You could save this as `net-compose.yml` and run a docker command like:
 
@@ -69,7 +69,7 @@ version: "3.7"
 
 services:
 
-  consul-vault:
+  consul-vault-service:
     image: "${CONSUL_VAULT_LATEST}"
     ports:
       - "8200:8200"
