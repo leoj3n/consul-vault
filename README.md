@@ -20,7 +20,7 @@ Scripts that stand up local or remote consul-vault instances and clusters:
 
 These scripts are written for [zsh](http://zsh.org/). See all available scripts at [`./run/`](./run).
 
-## How to use in other docker-compose projects?
+## How do you use consul-vault in other docker-compose projects?
 
 There are three methods of including consul-vault in another docker-compose project:
 
