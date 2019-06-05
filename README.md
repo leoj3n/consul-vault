@@ -6,7 +6,7 @@ Works with the latest versions of [`docker`](https://hub.docker.com/editions/com
 
 Shell scripts in [`./run/`](#run-scripts) and compose files in [`./yml/`](./yml) help to exemplify and simplify interacting with consul-vault.
 
-## Shell scripts
+## Run scripts
 
 These scripts are written for [zsh](http://zsh.org/).
 
