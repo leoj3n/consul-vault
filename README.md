@@ -18,9 +18,20 @@ These scripts are written for [`zsh`](http://zsh.org/).
 
 ## Including `consul-vault` in another docker project
 
-There are three ways of getting consul with vault into another docker-compose project:
+There are three methods of including consul-vault in another docker-compose project:
 
-`network:`, `IS_DEV=1`, and `--file`.
+- `network:`
+  - Creates a fully functioning cluster of three instances.
+  - Requires cloning the `consul-vault` repo.
+  - Allows your project to communicate with consul-vault across the same local docker host network.
+- `IS_DEV=1`
+  - Creates a single `-dev` mode instance.
+  - Requires a built image (perhaps from docker hub).
+  - Pulls in consul-vault from the built docker image.
+- `--file`
+  - Creates a single `-dev` mode instance.
+  - Requires cloning the `consul-vault` repo.
+  - Pulls in consul-vault from the cloned repo directory.
 
 ### `network:`
 
