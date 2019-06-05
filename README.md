@@ -2,17 +2,17 @@
 
 Implementation of the Autopilot Pattern for HashiCorp's Consul and Vault.
 
-Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) and [`triton`](https://github.com/joyent/node-triton#installation), and uses the latest releases of [`consul`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L14), [`vault`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L24), and [`containerpilot`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L5). Also, shell scripts in [`./run`](#run-scripts) help to exemplify and simplify CLI usage.
+Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) and [`triton`](https://github.com/joyent/node-triton#installation), and uses the latest releases of [`consul`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L14), [`vault`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L24), and [`containerpilot`](https://github.com/leoj3n/consul-vault/blob/f0a8e8e2384538062ce52b742f8c0d009397fbdb/Dockerfile#L5). Also, shell scripts in [`./run`](#run-scripts) and compose files in [`./yml`](./yml) help to exemplify and simplify CLI usage.
 
 ## `./run` scripts
 
 These scripts are written for [zsh](http://zsh.org/).
 
-- [`./run/local/dev/up.sh`](run/local/dev/up.sh)
+- [`./run/local/dev/up.sh`](./run/local/dev/up.sh)
   - Brings up a single local docker consul-vault `-dev` instance.
-- [`./run/local/demo/provision.sh`](run/local/demo/provision.sh)
+- [`./run/local/demo/provision.sh`](./run/local/demo/provision.sh)
   - Generates example certs and keys via self-signed CA before using them to stand up a local docker consul-vault cluster scaled to three instances.
-- [`./run/remote/triton/example.sh`](run/remote/triton/example.sh)
+- [`./run/remote/triton/example.sh`](./run/remote/triton/example.sh)
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
 
