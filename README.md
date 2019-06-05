@@ -18,7 +18,9 @@ These scripts are written for [`zsh`](http://zsh.org/).
 
 ## Including `consul-vault` in another docker project
 
-There are three ways of getting consul with vault into another docker-compose project: `network:`, `IS_DEV=1`, and `--file`.
+There are three ways of getting consul with vault into another docker-compose project:
+
+`network:`, `IS_DEV=1`, and `--file`.
 
 ### `network:`
 
