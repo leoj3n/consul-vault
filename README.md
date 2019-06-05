@@ -18,7 +18,7 @@ These scripts stand up local or remote clusters of consul-vault instances:
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
   - Uses generated example certs and keys in the `./secrets/` directory to stand up a remote triton-docker consul-vault cluster scaled to three instances.
 
-These scripts are written for [zsh](http://zsh.org/). See all available scripts at [`./run/`](./run).
+These scripts are written for [zsh](http://zsh.org/), see all available scripts at [`./run/`](./run).
 
 ## How do you use consul-vault in other docker-compose projects?
 
