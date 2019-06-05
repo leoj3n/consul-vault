@@ -19,7 +19,7 @@ Run scripts to demonstrate provisioning both local and remote clusters of consul
   - This must be run after `./run/local/demo/provision.sh` for the `./secrets/` directory to exist.
   - These are the same commands you would run with real keys and certs for production.
 
-These scripts are written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
+Scripts written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
 
 ## How do you use consul-vault in other docker-compose projects?
 
