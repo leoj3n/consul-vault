@@ -2,7 +2,7 @@
 
 Implementation of the [Autopilot Pattern](http://autopilotpattern.io/) for HashiCorp's Consul and Vault.
 
-Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) or [`triton`](https://github.com/joyent/node-triton#installation), using the latest [`consul`](https://www.consul.io/), [`vault`](https://www.vaultproject.io/), and [`containerpilot`](https://www.joyent.com/containerpilot).
+Works with the latest versions of [`docker`](https://hub.docker.com/editions/community/docker-ce-desktop-mac) or [`triton`](https://github.com/joyent/node-triton#installation). Uses the latest [`consul`](https://www.consul.io/), [`vault`](https://www.vaultproject.io/), and [`containerpilot`](https://www.joyent.com/containerpilot).
 
 Shell scripts in [`./run/`](#run-scripts) and compose files in [`./yml`](./yml) help to exemplify and simplify interacting with consul-vault.
 
