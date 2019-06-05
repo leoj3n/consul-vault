@@ -70,7 +70,7 @@ version: "3.7"
 services:
 
   consul-vault-service:
-    image: "${CONSUL_VAULT_LATEST}"
+    image: leoj3n/consul-vault:latest
     ports:
       - "8200:8200"
       - "8500:8500"
