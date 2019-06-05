@@ -6,7 +6,7 @@ Implementation of the [Autopilot Pattern](http://autopilotpattern.io/) for Hashi
 
 Reference the shell scripts in [`./run/`](#run-scripts) and related compose files in [`./yml/`](./yml) for consul-vault usage examples.
 
-## Run scripts
+## ./run
 
 These scripts stand up local or remote clusters of consul-vault instances:
 
