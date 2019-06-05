@@ -21,7 +21,7 @@ Run the following scripts to demonstrate provisioning both local and remote clus
 
 Scripts are written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
 
-### docker-compose
+### Existing docker-compose project
 
 There are at least three methods of coupling consul-vault to an existing docker-compose project:
 
