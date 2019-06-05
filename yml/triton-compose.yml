@@ -2,7 +2,7 @@ version: "2.1"
 
 services:
 
-  consul-vault-serv:
+  consul-vault-service:
     image: leoj3n/consul-vault:latest
     restart: always
     mem_limit: 128m
