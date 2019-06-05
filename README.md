@@ -98,4 +98,4 @@ For example, you could run a command like:
 $ docker-compose --project-name 'myapp' --file 'local-compose.yml' --file '../consul-vault/yml/local-compose.yml' --file '../consul-vault/yml/dev-compose.yml' up --detach
 ```
 
-Where `../consul-vault/yml/dev-compose.yml` (or [yml/dev-compose.yml](yml/dev-compose.yml)) does the setting of `IS_DEV=1`, etc.
+Where `../consul-vault/yml/dev-compose.yml` (or [yml/dev-compose.yml](yml/dev-compose.yml)) does the setting of `IS_DEV=1`, etc, as long a the service is named `consul-vault-service`.
