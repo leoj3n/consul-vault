@@ -21,7 +21,7 @@ Run these scripts to demonstrate provisioning both local and remote clusters of 
 
 Scripts written for [zsh](http://zsh.org/); see all available scripts at [`./run/`](./run).
 
-## How do you use consul-vault in other docker-compose projects?
+## Using consul-vault in other docker-compose projects
 
 There are three methods of including consul-vault in another docker-compose project:
 
