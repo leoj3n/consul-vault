@@ -89,6 +89,15 @@ service=consul-vault-service
 instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
+kubectl='yes'
+instances=()
+for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
+  echo $pod | grep -qe "^$SERVICE" >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    instances+=($pod)
+  fi
+done
+
 # TLS setup paths
 openssl_config=/usr/local/etc/openssl/openssl.cnf
 ca=secrets/CA
@@ -132,16 +141,16 @@ _copy_chown() {
   local src=$1
   local inst=$2
   local dest=$3
-  _docker cp ${src} ${inst}:${dest}
-  _docker exec ${inst} chown root:root ${dest}
-  _docker exec ${inst} chmod 755 ${dest}
+  _docker cp ${src} kre-chatbot/${inst}:${dest}
+  _docker exec ${inst} -- chown root:root ${dest}
+  _docker exec ${inst} -- chmod 755 ${dest}
 }
 
 # copy public key file to first instance
 _copy_key() {
   local keyfile=$1
   echo "Copying public keyfile ${keyfile} to instance"
-  _copy_chown "./secrets/${keyfile}" "${instance}_1" "${keyfile}"
+  _copy_chown "./secrets/${keyfile}" "${instances[0]}" "${keyfile}"
 }
 
 # create gossip token, and install token and keys on instances to encrypt both
@@ -159,7 +168,7 @@ secure() {
 
   if [ -z ${gossipKeyFile} ]; then
     echo 'Gossip key not provided; will be generated at ./secrets/gossip.key'
-    gossipKey=$(_docker exec ${instance}_1 consul keygen | tr -d '\r')
+    gossipKey=$(_docker exec ${instances[0]} -- consul keygen | tr -d '\r')
     echo ${gossipKey} > ./secrets/gossip.key
   else
     gossipKey=$(cat ${gossipKeyFile})
@@ -182,30 +191,30 @@ key_file = "/etc/ssl/private/consul-vault.key.pem"
 encrypt = "${gossipKey}"
 EOF
 
-  for i in {1..3}; do
-    echo "Securing ${instance}_${i}..."
+  for inst in "${instances[@]}"; do
+    echo "Securing ${inst}..."
 
     echo ' copying certificates and keys'
-    _docker exec "${instance}_${i}" mkdir -p '/etc/ssl/private'
-    _copy_chown "${ca_cert}" "${instance}_${i}" '/usr/local/share/ca-certificates/ca_cert.pem'
-    _copy_chown "${tls_cert}" "${instance}_${i}" '/etc/ssl/certs/consul-vault.cert.pem'
-    _copy_chown "${tls_key}" "${instance}_${i}" '/etc/ssl/private/consul-vault.key.pem'
+    _docker exec "${inst}" -- mkdir -p '/etc/ssl/private'
+    _copy_chown "${ca_cert}" "${inst}" '/usr/local/share/ca-certificates/ca_cert.pem'
+    _copy_chown "${tls_cert}" "${inst}" '/etc/ssl/certs/consul-vault.cert.pem'
+    _copy_chown "${tls_key}" "${inst}" '/etc/ssl/private/consul-vault.key.pem'
 
     echo ' copying Consul and Vault configuration for TLS'
-    _copy_chown './etc/consul-tls.hcl' "${instance}_${i}" '/etc/consul/consul.hcl'
-    _copy_chown './etc/vault-tls.hcl' "${instance}_${i}" '/etc/vault.hcl'
+    _copy_chown './etc/consul-tls.hcl' "${inst}" '/etc/consul/consul.hcl'
+    _copy_chown './etc/vault-tls.hcl' "${inst}" '/etc/vault.hcl'
 
     echo ' updating trusted root certificate (ignore the following warning)'
-    _docker exec "${instance}_${i}" update-ca-certificates
+    _docker exec "${inst}" -- update-ca-certificates
   done
 
-  if [[ "${COMPOSE_FILE##*/}" == 'triton-compose.yml' ]]; then
+  if [[ "${COMPOSE_FILE##*/}" == 'zzztriton-compose.yml' ]]; then
     echo 'Restarting cluster with new configuration'
     _docker_compose restart "${service}"
   else
-    for i in {1..3}; do
-      echo " reloading ${instance}_${i} containerpilot"
-      _docker exec "${instance}_${i}" containerpilot -reload
+    for inst in "${instances[@]}"; do
+      echo " reloading ${inst} containerpilot"
+      _docker exec "${inst}" -- containerpilot -reload
     done
   fi
 }
@@ -282,7 +291,7 @@ init() {
   already_initialized='no'
 
   until
-    vault_stdout="$(2>&1 _docker exec ${instance}_1 vault operator init \
+    vault_stdout="$(2>&1 _docker exec ${instances[0]} -- vault operator init \
       -key-shares=${#KEYS[@]} \
       -key-threshold=${threshold} \
       -pgp-keys="/${keys_arg}" > secrets/vault.keys)"
@@ -319,11 +328,11 @@ unseal() {
   echo
   echo 'Use the unseal key above when prompted while we unseal each Vault node...'
   echo
-  for i in {1..3}; do
+  for inst in "${instances[@]}"; do
     echo
-    bold "* Unsealing ${instance}_$i"
+    bold "* Unsealing ${inst}"
     until
-      _docker exec -it ${instance}_$i vault operator unseal
+      _docker exec -it ${inst} -- vault operator unseal
     do
       sleep 1
     done
@@ -338,15 +347,15 @@ policy() {
   _var_or_exit policyname 'You must provide a name for the policy!'
   _file_or_exit "${policyfile}" "${policyfile} not found."
 
-  _copy_chown "${policyfile}" "${instance}_1" "/tmp/$(basename ${policyfile})"
+  _copy_chown "${policyfile}" "${instances[0]}" "/tmp/$(basename ${policyfile})"
 
   until
-    _docker exec -it ${instance}_1 vault login
+    _docker exec -it ${instances[0]} -- vault login
   do
     sleep 1
   done
 
-  _docker exec -it ${instance}_1 \
+  _docker exec -it ${instances[0]} -- \
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
@@ -355,7 +364,7 @@ engine() {
   local paths=("${@}")
 
   for path in "${paths[@]}"; do
-    _docker exec -it "${instance}_1" vault secrets enable -path="${path}" kv
+    _docker exec -it "${instances[0]}" -- vault secrets enable -path="${path}" kv
   done
 }
 
@@ -455,17 +464,17 @@ up() {
 _docker() {
   local docker
 
-  if [[ "${COMPOSE_FILE##*/}" == 'triton-compose.yml' ]]; then
-    docker='triton-docker'
+  if [[ $kubectl == 'yes' ]]; then
+    docker='kubectl'
   else
     docker='docker'
   fi
 
   cat << EOF >> './docker_call_log'
-${docker} ${@}
+${docker} --namespace kre-chatbot ${@}
 EOF
 
-  "${docker}" ${@}
+  "${docker}" --namespace kre-chatbot ${@}
 }
 
 _docker_compose() {
@@ -510,7 +519,7 @@ _demo_wait_for_consul() {
   echo
   bold '* Waiting for Consul to form raft...'
   until
-    _docker exec ${instance}_1 consul info | grep -q "num_peers = 2"
+    _docker exec ${instances[0]} -- consul info | grep -q "num_peers = 2"
   do
     echo -n '.'
     sleep 1
@@ -736,7 +745,7 @@ demo() {
 
   check_tls
   check_pgp
-  check_triton
+  #check_triton
 
   _demo_up              # docker-compose up
   _demo_wait_for_consul # wait for consul to form 3-node raft
