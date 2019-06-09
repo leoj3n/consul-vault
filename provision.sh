@@ -207,17 +207,20 @@ EOF
 
     echo ' updating trusted root certificate (ignore the following warning)'
     _docker exec "${inst}" -- update-ca-certificates
+
+    echo " reloading ${inst} containerpilot"
+    _docker exec "${inst}" -- containerpilot -reload
   done
 
-  if [[ "${COMPOSE_FILE##*/}" == 'zzztriton-compose.yml' ]]; then
-    echo 'Restarting cluster with new configuration'
-    _docker_compose restart "${service}"
-  else
-    for inst in "${instances[@]}"; do
-      echo " reloading ${inst} containerpilot"
-      _docker exec "${inst}" -- containerpilot -reload
-    done
-  fi
+#  if [[ "${COMPOSE_FILE##*/}" == 'zzztriton-compose.yml' ]]; then
+#    echo 'Restarting cluster with new configuration'
+#    _docker_compose restart "${service}"
+#  else
+#    for inst in "${instances[@]}"; do
+#      echo " reloading ${inst} containerpilot"
+#      _docker exec "${inst}" -- containerpilot -reload
+#    done
+#  fi
 }
 
 # ensure that the user has provided public key(s) and that a valid threshold
