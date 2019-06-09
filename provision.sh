@@ -157,7 +157,6 @@ _copy_key() {
 # create gossip token, and install token and keys on instances to encrypt both
 # gossip and RPC
 secure() {
-  echo SECURING
   while true; do
     case $1 in
       -k | --tls-key ) tls_key=$2; shift 2;;
