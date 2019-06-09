@@ -9,7 +9,8 @@ services:
   # for this service definition.
   #
   # Instances use this Docker DNS host name of the service (passed in as the
-  # $SERVICE_HOST_NAME env var) to find each other and bootstrap the cluster.
+  # $CONSUL_VAULT_HOST_NAME env var) to find each other and bootstrap the
+  # cluster.
   #
   # Unless IS_DEV is set, at least three instances are required for quorum.
   # 
@@ -21,4 +22,4 @@ services:
       - "8500"
     environment:
       - CONSUL_DATACENTER_NAME=dc1
-      - SERVICE_HOST_NAME=consul-vault-service
+      - CONSUL_VAULT_HOST_NAME=consul-vault-service

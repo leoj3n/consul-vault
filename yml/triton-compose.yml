@@ -11,7 +11,7 @@ services:
       - "8500"
     environment:
       - CONSUL_DATACENTER_NAME=dc1
-      - SERVICE_HOST_NAME=consul-vault
+      - CONSUL_VAULT_HOST_NAME=consul-vault
     labels:
       - triton.cns.services=consul-vault
       - com.docker.swarm.affinities=["container!=~*consul-vault*"]

@@ -79,7 +79,7 @@ health() {
   else
     if [ "$(consul info | awk '/num_peers/{print$3}')" == 0 ]; then
       _log 'No peers in raft'
-      consul join "${SERVICE_HOST_NAME:-consul-vault-service}"
+      consul join "${CONSUL_VAULT_HOST_NAME:-cluster-consul-vault}"
     fi
   fi
 }

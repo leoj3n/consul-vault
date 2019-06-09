@@ -8,8 +8,6 @@ provision() {
 }
 
 print 'Triton provisioning using example data in ./secrets' && \
-#  provision check && \
-#  provision up && \
   provision secure \
     --gossip './secrets/gossip.key' \
     --ca-cert './secrets/CA/ca_cert.pem' \
@@ -18,3 +16,6 @@ print 'Triton provisioning using example data in ./secrets' && \
   provision init --keys 'example.asc' --threshold 1 && \
   provision unseal './secrets/example.asc.key' && \
   provision policy 'secret' './policies/example.hcl'
+
+#  provision check && \
+#  provision up && \

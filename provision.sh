@@ -90,10 +90,10 @@ instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
 kubectl='yes'
+service=consul-vault
 instances=()
 for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
-  echo $pod | grep -qe "^$SERVICE" >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
+  if [[ $pod =~ $service ]]; then
     instances+=($pod)
   fi
 done
@@ -156,6 +156,7 @@ _copy_key() {
 # create gossip token, and install token and keys on instances to encrypt both
 # gossip and RPC
 secure() {
+  echo SECURING
   while true; do
     case $1 in
       -k | --tls-key ) tls_key=$2; shift 2;;
@@ -441,7 +442,7 @@ check() {
     if [ ! -f '_env' ]; then
       echo TRITON_DC=${TRITON_DC} >> _env
       echo TRITON_ACCOUNT=${TRITON_ACCOUNT} >> _env
-      echo SERVICE_HOST_NAME=consul-vault.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
+      echo CONSUL_VAULT_HOST_NAME=consul-vault.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
       echo >> _env
     else
       echo 'Existing _env file found'
