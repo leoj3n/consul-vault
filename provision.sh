@@ -6,8 +6,7 @@ cat << EOF
 Usage: ./provision.sh [options] <command>
 --------------------------------------------------------------------------------
 provision.sh check:
-	Checks that your Triton and Docker environment is sane and configures an
-	environment file with a CNS record for Consul.
+	Checks that you have the needed programs.
 
 provision.sh up:
 	Starts a 3-node Vault cluster via Docker Compose and waits for all instances
@@ -63,10 +62,10 @@ provision.sh engine path [path]:
 --------------------------------------------------------------------------------
 
 provision.sh demo:
-	Runs a demonstration of the entire stack on Triton, creating a 3-node
-	cluster with RPC over TLS. The demo includes initializing the Vault and
-	unsealing it with PGP keys. You can either provide the demo with PGP keys
-	and TLS certificates or allow the script to generate them for you.
+  Runs a demonstration of the entire stack on k8s, creating a 3-node cluster
+  with RPC over TLS. The demo includes initializing the Vault and unsealing it
+  with PGP keys. You can either provide the demo with PGP keys and TLS
+  certificates or allow the script to generate them for you.
 	Parameters:
 
 	-p, --pgp-key        use this PGP key in lieu of creating a new one
@@ -89,14 +88,17 @@ service=consul-vault-service
 instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
-kubectl='yes'
-service=consul-vault
-instances=()
-for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
-  if [[ $pod =~ $service ]]; then
-    instances+=($pod)
-  fi
-done
+#kubectl='yes'
+if [[ "${kubectl}" == 'yes' ]]; then
+  instances=()
+  for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
+    if [[ "${pod}" =~ "${service}" ]]; then
+      instances+=(${pod})
+    fi
+  done
+else
+  instances=("${instance}_1" "${instance}_2" "${instance}_3")
+fi
 
 # TLS setup paths
 openssl_config=/usr/local/etc/openssl/openssl.cnf
@@ -109,11 +111,6 @@ ca_cert=
 fmt_rev=$(tput rev)
 fmt_bold=$(tput bold)
 fmt_reset=$(tput sgr0)
-
-# populated by `check` function whenever we're using Triton
-TRITON_USER=
-TRITON_DC=
-TRITON_ACCOUNT=
 
 # prints the argument bold and then resets the terminal colors
 bold() {
@@ -141,9 +138,13 @@ _copy_chown() {
   local src=$1
   local inst=$2
   local dest=$3
-  _docker cp ${src} kre-chatbot/${inst}:${dest}
-  _docker exec ${inst} -- chown root:root ${dest}
-  _docker exec ${inst} -- chmod 755 ${dest}
+  if [[ "${kubectl}" == 'yes' ]]; then
+    _docker cp ${src} kre-chatbot/${inst}:${dest}
+  else
+    _docker cp ${src} ${inst}:${dest}
+  fi
+  _docker_exec ${inst} chown root:root ${dest}
+  _docker_exec ${inst} chmod 755 ${dest}
 }
 
 # copy public key file to first instance
@@ -169,7 +170,7 @@ secure() {
 
   if [ -z ${gossipKeyFile} ]; then
     echo 'Gossip key not provided; will be generated at ./secrets/gossip.key'
-    gossipKey=$(_docker exec ${instances[0]} -- consul keygen | tr -d '\r')
+    gossipKey=$(_docker_exec ${instances[0]} consul keygen | tr -d '\r')
     echo ${gossipKey} > ./secrets/gossip.key
   else
     gossipKey=$(cat ${gossipKeyFile})
@@ -196,7 +197,7 @@ EOF
     echo "Securing ${inst}..."
 
     echo ' copying certificates and keys'
-    _docker exec "${inst}" -- mkdir -p '/etc/ssl/private'
+    _docker_exec "${inst}" mkdir -p '/etc/ssl/private'
     _copy_chown "${ca_cert}" "${inst}" '/usr/local/share/ca-certificates/ca_cert.pem'
     _copy_chown "${tls_cert}" "${inst}" '/etc/ssl/certs/consul-vault.cert.pem'
     _copy_chown "${tls_key}" "${inst}" '/etc/ssl/private/consul-vault.key.pem'
@@ -206,21 +207,11 @@ EOF
     _copy_chown './etc/vault-tls.hcl' "${inst}" '/etc/vault.hcl'
 
     echo ' updating trusted root certificate (ignore the following warning)'
-    _docker exec "${inst}" -- update-ca-certificates
+    _docker_exec "${inst}" update-ca-certificates
 
     echo " reloading ${inst} containerpilot"
-    _docker exec "${inst}" -- containerpilot -reload
+    _docker_exec "${inst}" containerpilot -reload
   done
-
-#  if [[ "${COMPOSE_FILE##*/}" == 'zzztriton-compose.yml' ]]; then
-#    echo 'Restarting cluster with new configuration'
-#    _docker_compose restart "${service}"
-#  else
-#    for inst in "${instances[@]}"; do
-#      echo " reloading ${inst} containerpilot"
-#      _docker exec "${inst}" -- containerpilot -reload
-#    done
-#  fi
 }
 
 # ensure that the user has provided public key(s) and that a valid threshold
@@ -295,7 +286,7 @@ init() {
   already_initialized='no'
 
   until
-    vault_stdout="$(2>&1 _docker exec ${instances[0]} -- vault operator init \
+    vault_stdout="$(2>&1 _docker_exec ${instances[0]} vault operator init \
       -key-shares=${#KEYS[@]} \
       -key-threshold=${threshold} \
       -pgp-keys="/${keys_arg}" > secrets/vault.keys)"
@@ -338,7 +329,7 @@ unseal() {
     echo
     bold "* Unsealing ${inst}"
     until
-      _docker exec -it ${inst} -- vault operator unseal
+      _docker_exec -it ${inst} vault operator unseal
     do
       sleep 1
     done
@@ -356,12 +347,12 @@ policy() {
   _copy_chown "${policyfile}" "${instances[0]}" "/tmp/$(basename ${policyfile})"
 
   until
-    _docker exec -it ${instances[0]} -- vault login
+    _docker_exec -it ${instances[0]} vault login
   do
     sleep 1
   done
 
-  _docker exec -it ${instances[0]} -- \
+  _docker_exec -it ${instances[0]} \
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
@@ -370,92 +361,34 @@ engine() {
   local paths=("${@}")
 
   for path in "${paths[@]}"; do
-    _docker exec -it "${instances[0]}" -- vault secrets enable -path="${path}" kv
+    _docker_exec -it "${instances[0]}" vault secrets enable -path="${path}" kv
   done
 }
 
-# Check for correct configuration for running on Triton.
-# Create _env file with CNS name for Consul.
+# Check for needed programs.
 check() {
-  command -v _docker >/dev/null 2>&1 || {
-    echo
-    echo 'Error! Docker is not installed!'
-    echo 'See https://docs.joyent.com/public-cloud/api-access/docker'
-    exit 1
-  }
-  if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
-  command -v triton >/dev/null 2>&1 || {
-    echo
-    echo 'Error! Joyent Triton CLI is not installed!'
-    echo 'See https://www.joyent.com/blog/introducing-the-triton-command-line-tool'
-    exit 1
-  }
-  fi
   command -v gpg >/dev/null 2>&1 || {
     echo
     echo 'Error! GPG is not installed!'
     exit 1
   }
 
-  #
-  # To get triton-docker passing this test, run:
-  #
-  #   eval "$(triton env --docker us-sw-1)"
-  #
-  # Note that your profile name might be different than "us-sw-1".
-  #
-  # If you are having to enter your password over and over:
-  #
-  #   Go to <https://my.joyent.com/main/#!/account> and "Create SSH Key" and
-  #   add the downloaded key to your ssh-agent. Now, create a new profile:
-  #
-  #     triton profile create
-  #
-  #  Select the downloaded SSH key fingerprint when prompted for keyId, then
-  #  set the completed profile as the current profile for triton:
-  #
-  #    triton profile set-current us-sw-1
-  #
-  # More information about node-triton and `triton profile create`:
-  #
-  #   https://github.com/joyent/node-triton#installation
-  #
+  command -v docker >/dev/null 2>&1 || {
+    echo
+    echo 'Error! Docker is not installed!'
+    exit 1
+  }
+
   if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
-    local docker_user=$(_docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
-
-    export TRITON_ACCOUNT=$(triton account get | awk -F": " '/id:/{print $2}')
-    export TRITON_USER=$(triton profile get | awk -F": " '/account:/{print $2}')
-    export TRITON_DC=$(triton profile get | awk -F"/" '/url:/{print $3}' | awk -F'.' '{print $1}')
-
-    # make sure Docker client is pointed to the same place as the Triton client
-    if [ ! "${docker_user}" = "${TRITON_USER}" ]; then
+    command -v kubectl >/dev/null 2>&1 || {
       echo
-      echo 'Error! The Triton CLI configuration does not match the Docker CLI configuration.'
-      echo "Docker user: ${docker_user}"
-      echo "Triton user: ${TRITON_USER}"
+      echo 'Error! kubectl is not installed!'
       exit 1
-    fi
-
-    local triton_cns_enabled=$(triton account get | awk -F": " '/cns/{print $2}')
-    if [ ! 'true' == "${triton_cns_enabled}" ]; then
-      echo
-      echo 'Error! Triton CNS is required and not enabled.'
-      exit 1
-    fi
-
-    # setup environment file
-    if [ ! -f '_env' ]; then
-      echo TRITON_DC=${TRITON_DC} >> _env
-      echo TRITON_ACCOUNT=${TRITON_ACCOUNT} >> _env
-      echo CONSUL_VAULT_HOST_NAME=consul-vault.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
-      echo >> _env
-    else
-      echo 'Existing _env file found'
-    fi
+    }
   fi
 }
 
-check_triton() {
+check_kubectl() {
   echo
   bold '* Checking your setup...'
   echo './provision.sh check'
@@ -463,24 +396,33 @@ check_triton() {
 }
 
 up() {
-  _triton_up
+  _kubectl_up
   _demo_wait_for_consul
 }
 
 _docker() {
   local docker
 
-  if [[ $kubectl == 'yes' ]]; then
+  if [[ "${kubectl}" == 'yes' ]]; then
     docker='kubectl'
+    namespace='--namespace kre-chatbot'
   else
     docker='docker'
   fi
 
   cat << EOF >> './docker_call_log'
-${docker} --namespace kre-chatbot ${@}
+${docker} ${namespace} ${@}
 EOF
 
-  "${docker}" --namespace kre-chatbot ${@}
+  "${docker}" ${namespace} ${@}
+}
+
+_docker_exec() {
+  local inst="${1}"
+  shift
+  local extra=''
+  [[ "${kubectl}" == 'yes' ]] && extra='--'
+  _docker exec ${inst} ${extra} ${@}
 }
 
 _docker_compose() {
@@ -488,11 +430,7 @@ _docker_compose() {
 
   echo "COMPOSE_FILE = ${COMPOSE_FILE##*/}"
 
-  if [[ "${COMPOSE_FILE##*/}" == 'triton-compose.yml' ]]; then
-    compose='triton-compose'
-  else
-    compose='docker-compose'
-  fi
+  compose='docker-compose'
 
   cat << EOF >> './docker_call_log'
 ${compose} --project-name ${project} --file ${COMPOSE_FILE} ${@}
@@ -501,9 +439,9 @@ EOF
   "${compose}" --project-name "${project}" --file "${COMPOSE_FILE}" ${@}
 }
 
-_triton_up() {
+_kubectl_up() {
   echo
-  bold "* Composing cluster of 3 ${service} service instances on Triton..."
+  bold "* Composing cluster of 3 ${service} service instances on k8s..."
   _docker_compose up -d && _docker_compose scale "${service}=3"
 }
 
@@ -525,7 +463,7 @@ _demo_wait_for_consul() {
   echo
   bold '* Waiting for Consul to form raft...'
   until
-    _docker exec ${instances[0]} -- consul info | grep -q "num_peers = 2"
+    _docker_exec ${instances[0]} consul info | grep -q "num_peers = 2"
   do
     echo -n '.'
     sleep 1
@@ -751,7 +689,7 @@ demo() {
 
   check_tls
   check_pgp
-  #check_triton
+  #check_kubectl
 
   _demo_up              # docker-compose up
   _demo_wait_for_consul # wait for consul to form 3-node raft
