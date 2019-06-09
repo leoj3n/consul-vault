@@ -94,7 +94,6 @@ if [[ "${COMPOSE_FILE##*/}" != 'local-compose.yml' ]]; then
   instances=()
   for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
     if [[ "${pod}" =~ "${service}" ]]; then
-      echo "POD $pod"
       instances+=(${pod})
     fi
   done
@@ -425,23 +424,17 @@ _docker_exec() {
 }
 
 _docker_compose() {
-  local compose
-
-  echo "COMPOSE_FILE = ${COMPOSE_FILE##*/}"
-
-  compose='docker-compose'
-
   cat << EOF >> './docker_call_log'
-${compose} --project-name ${project} --file ${COMPOSE_FILE} ${@}
+docker-compose --project-name ${project} --file ${COMPOSE_FILE} ${@}
 EOF
 
-  "${compose}" --project-name "${project}" --file "${COMPOSE_FILE}" ${@}
+  docker-compose --project-name "${project}" --file "${COMPOSE_FILE}" ${@}
 }
 
 _kubectl_up() {
   echo
   bold "* Composing cluster of 3 ${service} service instances on k8s..."
-  _docker_compose up -d && _docker_compose scale "${service}=3"
+  kubectl apply -f ./yaml/
 }
 
 _demo_up() {
