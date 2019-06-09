@@ -5,8 +5,8 @@ services:
   #
   # Service definition for a consul-vault cluster.
   #
-  # Docker DNS will consistently assume the host name of "consul-vault-service"
-  # for this service definition.
+  # Docker DNS will consistently assume the host name of "consul-vault" for
+  # this service definition.
   #
   # Instances use this Docker DNS host name of the service (passed in as the
   # $CONSUL_VAULT_HOST_NAME env var) to find each other and bootstrap the
@@ -14,7 +14,7 @@ services:
   #
   # Unless IS_DEV is set, at least three instances are required for quorum.
   # 
-  consul-vault-service:
+  consul-vault:
     build: ..
     image: leoj3n/consul-vault:latest
     ports:
@@ -22,4 +22,4 @@ services:
       - "8500"
     environment:
       - CONSUL_DATACENTER_NAME=dc1
-      - CONSUL_VAULT_HOST_NAME=consul-vault-service
+      - CONSUL_VAULT_HOST_NAME=consul-vault

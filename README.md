@@ -78,7 +78,7 @@ version: "3.7"
 
 services:
 
-  consul-vault-service:
+  consul-vault:
     image: leoj3n/consul-vault:latest
     ports:
       - "8200:8200"
@@ -109,4 +109,4 @@ $ docker-compose --project-name 'myapp' --file 'local-compose.yml' --file '../co
 
 Where `../consul-vault/yml/dev-compose.yml` (or [yml/dev-compose.yml](yml/dev-compose.yml)) does the setting of `IS_DEV=1`, etc.
 
-This works as long as the service is named `consul-vault-service`.
+This works as long as the service is named `consul-vault`.

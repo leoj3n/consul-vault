@@ -84,20 +84,20 @@ EOF
 repo=consul-vault
 project_version=0.1
 project=consulvault
-service=consul-vault-service
+service=consul-vault
 instance="${project}_${service}"
 COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
-#kubectl='yes'
-if [[ "${kubectl}" == 'yes' ]]; then
+instances=("${instance}_1" "${instance}_2" "${instance}_3")
+if [[ "${COMPOSE_FILE##*/}" != 'local-compose.yml' ]]; then
+  kubectl='yes'
   instances=()
   for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
     if [[ "${pod}" =~ "${service}" ]]; then
+      echo "POD $pod"
       instances+=(${pod})
     fi
   done
-else
-  instances=("${instance}_1" "${instance}_2" "${instance}_3")
 fi
 
 # TLS setup paths
@@ -378,7 +378,7 @@ check() {
     exit 1
   }
 
-  if [ ${COMPOSE_FILE##*/} != "local-compose.yml" ]; then
+  if [[ "${kubectl}" == 'yes' ]]; then
     command -v kubectl >/dev/null 2>&1 || {
       echo
       echo 'Error! kubectl is not installed!'

@@ -2,7 +2,7 @@
 
 local 'service' 'cache'
 
-service='consul-vault-service'
+service='consul-vault'
 vared -p 'Docker compose service name: ' 'service'
 
 if read -q "?Bust the cache [y/N]? "; then

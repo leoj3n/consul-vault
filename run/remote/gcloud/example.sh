@@ -7,7 +7,8 @@ provision() {
   "${dir}/provision.sh" "${@}"
 }
 
-print 'Triton provisioning using example data in ./secrets' && \
+print 'Provisioning using example data in ./secrets' && \
+  provision check && \
   provision secure \
     --gossip './secrets/gossip.key' \
     --ca-cert './secrets/CA/ca_cert.pem' \
@@ -17,5 +18,3 @@ print 'Triton provisioning using example data in ./secrets' && \
   provision unseal './secrets/example.asc.key' && \
   provision policy 'secret' './policies/example.hcl'
 
-#  provision check && \
-#  provision up && \
