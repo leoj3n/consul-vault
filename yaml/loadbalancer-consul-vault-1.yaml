@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: consul-vault-1
+  name: loadbalancer-consul-vault-1
+  namespace: kre-chatbot
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - name: 8200-to-8200-tcp
+    port: 8200
+    protocol: TCP
+    targetPort: 8200
+  - name: 8500-to-8500-tcp
+    port: 8500
+    protocol: TCP
+    targetPort: 8500
+  selector:
+    app: consul-vault-1
+  sessionAffinity: None
+  type: LoadBalancer

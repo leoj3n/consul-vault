@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: consul-vault-1
+  name: cluster-consul-vault
+  namespace: kre-chatbot
+spec:
+  ports:
+  - name: 8500-to-8500-tcp
+    port: 8500
+    protocol: TCP
+    targetPort: 8500
+  - name: 8200-to-8200-tcp
+    port: 8200
+    protocol: TCP
+    targetPort: 8200
+  - name: 8300-to-8300-tcp
+    port: 8300
+    protocol: TCP
+    targetPort: 8300
+  - name: 8301-to-8301-tcp
+    port: 8301
+    protocol: TCP
+    targetPort: 8301
+  - name: 8302-to-8302-tcp
+    port: 8302
+    protocol: TCP
+    targetPort: 8302
+  - name: 8400-to-8400-tcp
+    port: 8400
+    protocol: TCP
+    targetPort: 8400
+  - name: 53-to-53-tcp
+    port: 53
+    protocol: TCP
+    targetPort: 53
+  selector:
+    app: consul-vault-1
+  sessionAffinity: None
+  type: ClusterIP

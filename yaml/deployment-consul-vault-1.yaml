@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: consul-vault-1
+  name: consul-vault-1
+  namespace: kre-chatbot
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: consul-vault-1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: consul-vault-1
+    spec:
+      containers:
+      - env:
+        - name: CONSUL_VAULT_HOST_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: CONSUL_VAULT_HOST_NAME
+              name: consul-vault-1-config
+        image: us.gcr.io/kre-k8s/consul-vault@sha256:5133a866e7db0982e1ce49e099e2fdfe495518ac545062250b8b06bc8707693e
+        imagePullPolicy: IfNotPresent
+        name: consul-vault-sha256
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30

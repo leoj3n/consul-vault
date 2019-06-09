@@ -86,18 +86,8 @@ project_version=0.1
 project=consulvault
 service=consul-vault
 instance="${project}_${service}"
-COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
-
 instances=("${instance}_1" "${instance}_2" "${instance}_3")
-if [[ "${COMPOSE_FILE##*/}" != 'local-compose.yml' ]]; then
-  kubectl='yes'
-  instances=()
-  for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
-    if [[ "${pod}" =~ "${service}" ]]; then
-      instances+=(${pod})
-    fi
-  done
-fi
+COMPOSE_FILE=${COMPOSE_FILE:-yml/docker-compose.yml}
 
 # TLS setup paths
 openssl_config=/usr/local/etc/openssl/openssl.cnf
@@ -294,20 +284,19 @@ init() {
       break
     fi
 
-    sleep 1
+    sleep 5
   done
 
-  if [[ ${already_initialized} == 'no' ]]; then
+  if [[ "${already_initialized}" == 'no' ]]; then
     echo 'Vault initialized.'
     echo
     _split_encrypted_keys ${KEYS[@]}
     _print_root_token
+    echo 'Distribute encrypted key files to operators for unsealing.'
   else
     echo 'Vault already initialized.'
     echo
   fi
-
-  echo 'Distribute encrypted key files to operators for unsealing.'
 }
 
 # Use the encrypted keyfile to unseal all instances. this needs to be performed
@@ -667,7 +656,7 @@ clean() {
 
 demo() {
   while true; do
-    case $1 in
+    case ${1} in
       -p | --pgp-key ) pgp_key=$2; shift 2;;
       -k | --tls-key ) tls_key=$2; shift 2;;
       -c | --tls-cert ) tls_cert=$2; shift 2;;
@@ -679,9 +668,11 @@ demo() {
     esac
   done
 
+  _detect_remote
+
   check_tls
   check_pgp
-  #check_kubectl
+  [[ "${kubectl}" == 'yes' ]] && check_kubectl
 
   _demo_up              # docker-compose up
   _demo_wait_for_consul # wait for consul to form 3-node raft
@@ -690,6 +681,18 @@ demo() {
   _demo_unseal          # ask operator for unseal key
   _demo_policy          # login to vault, apply policy
   _demo_engine          # enable the "kv" secrets engine at secret/
+}
+
+_detect_remote() {
+  if [[ "${COMPOSE_FILE##*/}" != 'local-compose.yml' ]]; then
+    kubectl='yes'
+    instances=()
+    for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
+      if [[ "${pod}" =~ "${service}" ]]; then
+        instances+=(${pod})
+      fi
+    done
+  fi
 }
 
 
@@ -708,17 +711,21 @@ ship() {
 # parse arguments
 
 while true; do
-    case $1 in
-        check | check_* | up | secure | init | unseal | policy | engine | demo | build | ship | help) cmd=$1; shift; break;;
-        *) break;;
-    esac
+  case ${1} in
+    check | check_* | up | secure | init | unseal | policy | engine | demo | build | ship | help) cmd=$1; shift; break;;
+    *) break;;
+  esac
 done
 
-if [ -z $cmd ]; then
-    help
-    exit
+if [ -z ${cmd} ]; then
+  help
+  exit
 fi
 
 [ -f './docker_call_log' ] && rm './docker_call_log'
+
+if [[ "${cmd}" != 'demo' ]]; then
+  _detect_remote
+fi
 
 $cmd $@
