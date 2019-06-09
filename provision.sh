@@ -309,9 +309,11 @@ init() {
     echo 'Vault initialized.'
     echo
     _split_encrypted_keys ${KEYS[@]}
+    _print_root_token
+  else
+    echo 'Vault already initialized.'
+    echo
   fi
-
-  _print_root_token
 
   echo 'Distribute encrypted key files to operators for unsealing.'
 }
