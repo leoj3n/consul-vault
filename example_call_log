@@ -1,0 +1,82 @@
+docker-compose --project-name consulvault --file yml/local-compose.yml up --detach --scale consul-vault=3
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul info
+docker  exec consulvault_consul-vault_1 consul keygen
+docker  exec consulvault_consul-vault_1 mkdir -p /etc/ssl/private
+docker  cp secrets/CA/ca_cert.pem consulvault_consul-vault_1:/usr/local/share/ca-certificates/ca_cert.pem
+docker  exec consulvault_consul-vault_1 chown root:root /usr/local/share/ca-certificates/ca_cert.pem
+docker  exec consulvault_consul-vault_1 chmod 755 /usr/local/share/ca-certificates/ca_cert.pem
+docker  cp ./secrets/consul-vault.cert.pem consulvault_consul-vault_1:/etc/ssl/certs/consul-vault.cert.pem
+docker  exec consulvault_consul-vault_1 chown root:root /etc/ssl/certs/consul-vault.cert.pem
+docker  exec consulvault_consul-vault_1 chmod 755 /etc/ssl/certs/consul-vault.cert.pem
+docker  cp ./secrets/consul-vault.key.pem consulvault_consul-vault_1:/etc/ssl/private/consul-vault.key.pem
+docker  exec consulvault_consul-vault_1 chown root:root /etc/ssl/private/consul-vault.key.pem
+docker  exec consulvault_consul-vault_1 chmod 755 /etc/ssl/private/consul-vault.key.pem
+docker  cp ./etc/consul-tls.hcl consulvault_consul-vault_1:/etc/consul/consul.hcl
+docker  exec consulvault_consul-vault_1 chown root:root /etc/consul/consul.hcl
+docker  exec consulvault_consul-vault_1 chmod 755 /etc/consul/consul.hcl
+docker  cp ./etc/vault-tls.hcl consulvault_consul-vault_1:/etc/vault.hcl
+docker  exec consulvault_consul-vault_1 chown root:root /etc/vault.hcl
+docker  exec consulvault_consul-vault_1 chmod 755 /etc/vault.hcl
+docker  exec consulvault_consul-vault_1 update-ca-certificates
+docker  exec consulvault_consul-vault_1 containerpilot -reload
+docker  exec consulvault_consul-vault_2 mkdir -p /etc/ssl/private
+docker  cp secrets/CA/ca_cert.pem consulvault_consul-vault_2:/usr/local/share/ca-certificates/ca_cert.pem
+docker  exec consulvault_consul-vault_2 chown root:root /usr/local/share/ca-certificates/ca_cert.pem
+docker  exec consulvault_consul-vault_2 chmod 755 /usr/local/share/ca-certificates/ca_cert.pem
+docker  cp ./secrets/consul-vault.cert.pem consulvault_consul-vault_2:/etc/ssl/certs/consul-vault.cert.pem
+docker  exec consulvault_consul-vault_2 chown root:root /etc/ssl/certs/consul-vault.cert.pem
+docker  exec consulvault_consul-vault_2 chmod 755 /etc/ssl/certs/consul-vault.cert.pem
+docker  cp ./secrets/consul-vault.key.pem consulvault_consul-vault_2:/etc/ssl/private/consul-vault.key.pem
+docker  exec consulvault_consul-vault_2 chown root:root /etc/ssl/private/consul-vault.key.pem
+docker  exec consulvault_consul-vault_2 chmod 755 /etc/ssl/private/consul-vault.key.pem
+docker  cp ./etc/consul-tls.hcl consulvault_consul-vault_2:/etc/consul/consul.hcl
+docker  exec consulvault_consul-vault_2 chown root:root /etc/consul/consul.hcl
+docker  exec consulvault_consul-vault_2 chmod 755 /etc/consul/consul.hcl
+docker  cp ./etc/vault-tls.hcl consulvault_consul-vault_2:/etc/vault.hcl
+docker  exec consulvault_consul-vault_2 chown root:root /etc/vault.hcl
+docker  exec consulvault_consul-vault_2 chmod 755 /etc/vault.hcl
+docker  exec consulvault_consul-vault_2 update-ca-certificates
+docker  exec consulvault_consul-vault_2 containerpilot -reload
+docker  exec consulvault_consul-vault_3 mkdir -p /etc/ssl/private
+docker  cp secrets/CA/ca_cert.pem consulvault_consul-vault_3:/usr/local/share/ca-certificates/ca_cert.pem
+docker  exec consulvault_consul-vault_3 chown root:root /usr/local/share/ca-certificates/ca_cert.pem
+docker  exec consulvault_consul-vault_3 chmod 755 /usr/local/share/ca-certificates/ca_cert.pem
+docker  cp ./secrets/consul-vault.cert.pem consulvault_consul-vault_3:/etc/ssl/certs/consul-vault.cert.pem
+docker  exec consulvault_consul-vault_3 chown root:root /etc/ssl/certs/consul-vault.cert.pem
+docker  exec consulvault_consul-vault_3 chmod 755 /etc/ssl/certs/consul-vault.cert.pem
+docker  cp ./secrets/consul-vault.key.pem consulvault_consul-vault_3:/etc/ssl/private/consul-vault.key.pem
+docker  exec consulvault_consul-vault_3 chown root:root /etc/ssl/private/consul-vault.key.pem
+docker  exec consulvault_consul-vault_3 chmod 755 /etc/ssl/private/consul-vault.key.pem
+docker  cp ./etc/consul-tls.hcl consulvault_consul-vault_3:/etc/consul/consul.hcl
+docker  exec consulvault_consul-vault_3 chown root:root /etc/consul/consul.hcl
+docker  exec consulvault_consul-vault_3 chmod 755 /etc/consul/consul.hcl
+docker  cp ./etc/vault-tls.hcl consulvault_consul-vault_3:/etc/vault.hcl
+docker  exec consulvault_consul-vault_3 chown root:root /etc/vault.hcl
+docker  exec consulvault_consul-vault_3 chmod 755 /etc/vault.hcl
+docker  exec consulvault_consul-vault_3 update-ca-certificates
+docker  exec consulvault_consul-vault_3 containerpilot -reload
+docker  cp ./secrets/example.asc consulvault_consul-vault_1:example.asc
+docker  exec consulvault_consul-vault_1 chown root:root example.asc
+docker  exec consulvault_consul-vault_1 chmod 755 example.asc
+docker  exec consulvault_consul-vault_1 vault operator init -key-shares=1 -key-threshold=1 -pgp-keys=/example.asc
+docker  exec consulvault_consul-vault_1 vault operator init -key-shares=1 -key-threshold=1 -pgp-keys=/example.asc
+docker  exec consulvault_consul-vault_1 vault operator init -key-shares=1 -key-threshold=1 -pgp-keys=/example.asc
+docker  exec consulvault_consul-vault_1 vault operator init -key-shares=1 -key-threshold=1 -pgp-keys=/example.asc
+docker  exec -it consulvault_consul-vault_1 vault operator unseal
+docker  exec -it consulvault_consul-vault_2 vault operator unseal
+docker  exec -it consulvault_consul-vault_3 vault operator unseal
+docker  cp ./policies/example.hcl consulvault_consul-vault_1:/tmp/example.hcl
+docker  exec consulvault_consul-vault_1 chown root:root /tmp/example.hcl
+docker  exec consulvault_consul-vault_1 chmod 755 /tmp/example.hcl
+docker  exec -it consulvault_consul-vault_1 vault login
+docker  exec -it consulvault_consul-vault_1 vault policy write secret /tmp/example.hcl
+docker  exec -it consulvault_consul-vault_1 vault secrets enable -path=secret/ kv

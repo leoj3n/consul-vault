@@ -198,6 +198,7 @@ EOF
     _docker_exec "${inst}" update-ca-certificates
 
     echo " reloading ${inst} containerpilot"
+    _docker_exec "${inst}" rm -rf /data/services /data/checks
     _docker_exec "${inst}" containerpilot -reload
   done
 }
@@ -316,7 +317,7 @@ unseal() {
     echo
     bold "* Unsealing ${inst}"
     until
-      _docker_exec -it ${inst} vault operator unseal
+      _docker_exec_it ${inst} vault operator unseal
     do
       sleep 1
     done
@@ -334,12 +335,12 @@ policy() {
   _copy_chown "${policyfile}" "${instances[0]}" "/tmp/$(basename ${policyfile})"
 
   until
-    _docker_exec -it ${instances[0]} vault login
+    _docker_exec_it ${instances[0]} vault login
   do
     sleep 1
   done
 
-  _docker_exec -it ${instances[0]} \
+  _docker_exec_it ${instances[0]} \
     vault policy write "${policyname}" "/tmp/$(basename ${policyfile})"
 }
 
@@ -348,7 +349,7 @@ engine() {
   local paths=("${@}")
 
   for path in "${paths[@]}"; do
-    _docker_exec -it "${instances[0]}" vault secrets enable -path="${path}" kv
+    _docker_exec_it "${instances[0]}" vault secrets enable -path="${path}" kv
   done
 }
 
@@ -402,6 +403,14 @@ ${docker} ${namespace} ${@}
 EOF
 
   "${docker}" ${namespace} ${@}
+}
+
+_docker_exec_it() {
+  local inst="${1}"
+  shift
+  local extra=''
+  [[ "${kubectl}" == 'yes' ]] && extra='--'
+  _docker exec -it ${inst} ${extra} ${@}
 }
 
 _docker_exec() {
@@ -701,10 +710,11 @@ build() {
 }
 
 ship() {
-  local githash=$(git rev-parse --short HEAD)
-  _docker tag ${repo}:latest ${repo}:${project_version}-${githash}
-  _docker push ${repo}:latest
-  _docker push ${repo}:${project_version}-${githash}
+#  local githash=$(git rev-parse --short HEAD)
+#  _docker tag ${repo}:latest ${repo}:${project_version}-${githash}
+#  _docker push ${repo}:latest
+#  _docker push ${repo}:${project_version}-${githash}
+  echo 'todo'
 }
 
 # ---------------------------------------------------
