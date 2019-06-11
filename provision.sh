@@ -128,7 +128,7 @@ _copy_chown() {
   local inst=$2
   local dest=$3
   if [[ "${kubectl}" == 'yes' ]]; then
-    _docker cp ${src} kre-chatbot/${inst}:${dest}
+    _docker cp ${src} ${KUBE_NAMESPACE}/${inst}:${dest}
   else
     _docker cp ${src} ${inst}:${dest}
   fi
@@ -393,7 +393,7 @@ _docker() {
 
   if [[ "${kubectl}" == 'yes' ]]; then
     docker='kubectl'
-    namespace='--namespace kre-chatbot'
+    namespace="--namespace ${KUBE_NAMESPACE}"
   else
     docker='docker'
   fi
@@ -696,7 +696,7 @@ _detect_remote() {
   if [[ "${COMPOSE_FILE##*/}" != 'local-compose.yml' ]]; then
     kubectl='yes'
     instances=()
-    for pod in $(kubectl -n kre-chatbot get pods --output=jsonpath={.items..metadata.name}); do
+    for pod in $(kubectl -n "${KUBE_NAMESPACE}" get pods --output='jsonpath={.items..metadata.name}'); do
       if [[ "${pod}" =~ "${service}" ]]; then
         instances+=(${pod})
       fi

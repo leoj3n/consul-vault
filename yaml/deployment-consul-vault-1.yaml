@@ -4,7 +4,7 @@ metadata:
   labels:
     app: consul-vault-1
   name: consul-vault-1
-  namespace: kre-chatbot
+  namespace: "${KUBE_NAMESPACE}"
 spec:
   replicas: 3
   selector:
