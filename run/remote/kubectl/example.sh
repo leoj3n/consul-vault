@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-local dir="${0:a:h:h}/kubectl"
+local dir="${0:a:h}"
 
 provision() {
   print "RUNNING: ${dir}/provision.sh ${@}"

@@ -133,6 +133,7 @@ _copy_chown() {
   else
     _docker cp "${src}" "${inst}:${dest}"
   fi
+
   _docker_exec "${inst}" chown 'root:root' "${dest}"
   _docker_exec "${inst}" chmod 755 "${dest}"
 }
