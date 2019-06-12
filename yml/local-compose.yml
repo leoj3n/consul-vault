@@ -8,11 +8,12 @@ services:
   # Docker DNS will consistently assume the host name of "consul-vault" for
   # this service definition.
   #
-  # Instances use this Docker DNS host name of the service (passed in as the
-  # $CONSUL_VAULT_HOST_NAME env var) to find each other and bootstrap the
-  # cluster.
+  # Instances use Docker DNS to find each other and bootstrap the cluster.
   #
-  # Unless IS_DEV is set, at least three instances are required for quorum.
+  # CONSUL_VAULT_HOST_NAME can be used to set the host name to something other
+  # than "consul-vault" for your production network.
+  #
+  # At least three instances are required for quorum unless IS_DEV is set.
   # 
   consul-vault:
     build: ..

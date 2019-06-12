@@ -11,8 +11,8 @@ RUN export CONTAINERPILOT_CHECKSUM=1248784ff475e6fda69ebf7a2136adbfb902f74b \
     && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
     && rm /tmp/containerpilot.tar.gz
 
-ENV CONSUL_VERSION=1.0.0
-RUN export CONSUL_CHECKSUM=585782e1fb25a2096e1776e2da206866b1d9e1f10b71317e682e03125f22f479 \
+ENV CONSUL_VERSION=1.5.1
+RUN export CONSUL_CHECKSUM=58fbf392965b629db0d08984ec2bd43a5cb4c7cc7ba059f2494ec37c32fdcb91 \
     && export archive=consul_${CONSUL_VERSION}_linux_amd64.zip \
     && curl -Lso /tmp/${archive} https://releases.hashicorp.com/consul/${CONSUL_VERSION}/${archive} \
     && echo "${CONSUL_CHECKSUM}  /tmp/${archive}" | sha256sum -c \
@@ -21,8 +21,8 @@ RUN export CONSUL_CHECKSUM=585782e1fb25a2096e1776e2da206866b1d9e1f10b71317e682e0
     && chmod +x /bin/consul \
     && rm /tmp/${archive}
 
-ENV VAULT_VERSION=1.1.2
-RUN export VAULT_CHECKSUM=e927fd4daac11f6c7b8b3f1f53f2017516e29e99585dc975b657acdeac43500b \
+ENV VAULT_VERSION=1.1.3
+RUN export VAULT_CHECKSUM=06080b2d1631ca13f27920acde30c00567a8fe54d1188cca86b4c5f8a8936e60 \
   && export archive=vault_${VAULT_VERSION}_linux_amd64.zip \
   && curl -Lso /tmp/${archive} https://releases.hashicorp.com/vault/${VAULT_VERSION}/${archive} \
   && echo "${VAULT_CHECKSUM}  /tmp/${archive}" | sha256sum -c \
