@@ -22,7 +22,7 @@ RUN export CONSUL_CHECKSUM=58fbf392965b629db0d08984ec2bd43a5cb4c7cc7ba059f2494ec
     && rm /tmp/${archive}
 
 ENV VAULT_VERSION=1.1.3
-RUN export VAULT_CHECKSUM=06080b2d1631ca13f27920acde30c00567a8fe54d1188cca86b4c5f8a8936e60 \
+RUN export VAULT_CHECKSUM=293b88f4d31f6bcdcc8b508eccb7b856a0423270adebfa0f52f04144c5a22ae0 \
   && export archive=vault_${VAULT_VERSION}_linux_amd64.zip \
   && curl -Lso /tmp/${archive} https://releases.hashicorp.com/vault/${VAULT_VERSION}/${archive} \
   && echo "${VAULT_CHECKSUM}  /tmp/${archive}" | sha256sum -c \
