@@ -27,8 +27,8 @@ spec:
             configMapKeyRef:
               key: CONSUL_VAULT_HOST_NAME
               name: consul-vault-1-config
-        image: us.gcr.io/kre-k8s/consul-vault@sha256:e1b896b601a4f89760eedc3a55821dac9c61cebe77b0b97c245af443e81f7f47
-        imagePullPolicy: IfNotPresent
+        image: us.gcr.io/kre-k8s/consul-vault
+        imagePullPolicy: Always
         name: consul-vault-sha256
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
