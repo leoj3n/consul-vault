@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: consul-vault-1
-  name: loadbalancer-consul-vault-1
+  name: consul-vault-1
   namespace: kre-chatbot
 spec:
   externalTrafficPolicy: Cluster
