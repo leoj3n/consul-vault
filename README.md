@@ -44,7 +44,7 @@ These will be explained in more detail in the following sections.
 
 #### `network:`
 
-If your development process would be aided by persisting consul and vault data to a backend locally, or if you are wanting to test out consul+vault clustering locally, or perhaps (if for some reason) your app needs to connect to consul and vault over TLS when locally under development, then consider use the `networks:` method. However, the `IS_DEV=1` method might be better.
+If your development process would be aided by persisting consul and vault data to a backend locally, or if you are wanting to test out consul+vault clustering locally, or perhaps (if for some reason) your app needs to connect to consul and vault over TLS when locally under development, then consider the `networks:` method. However, the `IS_DEV=1` method might be better.
 
 Two separately-spun-up projects are able to communicate over the local docker network using the following configuration with the `local-compose.yml` of the project containing the app code:
 
