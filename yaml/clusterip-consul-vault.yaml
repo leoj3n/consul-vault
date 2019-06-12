@@ -3,8 +3,8 @@ kind: Service
 metadata:
   labels:
     app: consul-vault-1
-  name: cluster-consul-vault
-  namespace: "${KUBE_NAMESPACE}"
+  name: consul-vault
+  namespace: "${KUBECTL_NAMESPACE}"
 spec:
   ports:
   - name: 8500-to-8500-tcp

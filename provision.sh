@@ -124,16 +124,17 @@ _var_or_exit() {
 }
 
 _copy_chown() {
-  local src=$1
-  local inst=$2
-  local dest=$3
+  local src="${1}"
+  local inst="${2}"
+  local dest="${3}"
+
   if [[ "${kubectl}" == 'yes' ]]; then
-    _docker cp ${src} ${KUBE_NAMESPACE}/${inst}:${dest}
+    _docker cp "${src}" "${KUBECTL_NAMESPACE:-default}/${inst}:${dest}"
   else
-    _docker cp ${src} ${inst}:${dest}
+    _docker cp "${src}" "${inst}:${dest}"
   fi
-  _docker_exec ${inst} chown root:root ${dest}
-  _docker_exec ${inst} chmod 755 ${dest}
+  _docker_exec "${inst}" chown 'root:root' "${dest}"
+  _docker_exec "${inst}" chmod 755 "${dest}"
 }
 
 # copy public key file to first instance
@@ -393,7 +394,7 @@ _docker() {
 
   if [[ "${kubectl}" == 'yes' ]]; then
     docker='kubectl'
-    namespace="--namespace ${KUBE_NAMESPACE}"
+    namespace="--namespace ${KUBECTL_NAMESPACE:-default}"
   else
     docker='docker'
   fi
@@ -696,7 +697,7 @@ _detect_remote() {
   if [[ "${COMPOSE_FILE##*/}" != 'local-compose.yml' ]]; then
     kubectl='yes'
     instances=()
-    for pod in $(kubectl -n "${KUBE_NAMESPACE}" get pods --output='jsonpath={.items..metadata.name}'); do
+    for pod in $(kubectl --namespace "${KUBECTL_NAMESPACE:-default}" get pods --output='jsonpath={.items..metadata.name}'); do
       if [[ "${pod}" =~ "${service}" ]]; then
         instances+=(${pod})
       fi

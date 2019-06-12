@@ -2,6 +2,6 @@
 
 for file in yaml/*.yaml; do
   cat "${file}" | \
-    sed 's/\${KUBE_NAMESPACE}'"/${KUBE_NAMESPACE}/g" | \
+    sed 's/\${KUBECTL_NAMESPACE}'"/${KUBECTL_NAMESPACE}/g" | \
     kubectl apply -f -
 done

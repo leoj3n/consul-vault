@@ -1,3 +1,3 @@
 #!/usr/bin/env zsh
 
-kubectl --namespace "${KUBE_NAMESPACE:-default}" ${@}
+kubectl --namespace "${KUBECTL_NAMESPACE:-default}" ${@}
