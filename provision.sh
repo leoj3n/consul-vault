@@ -272,7 +272,7 @@ init() {
     _copy_key "${key}"
   done
 
-  echo 'Attempting to initialize vault (local may take up to 30 seconds before succeeding)...'
+  echo 'Attempting to initialize vault (may take up to 30 seconds before succeeding)...'
 
   already_initialized='no'
 
