@@ -1,0 +1,2 @@
+[ SAN ]
+subjectAltName = DNS:vault,DNS:consul,IP:127.0.0.1
