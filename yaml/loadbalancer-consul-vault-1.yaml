@@ -12,10 +12,19 @@ spec:
     port: 8200
     protocol: TCP
     targetPort: 8200
-  - name: 8500-to-8500-tcp
-    port: 8500
-    protocol: TCP
-    targetPort: 8500
+#
+# Consul has no authentication by default. Instead, use kubectl to forward a
+# port like:
+#
+#   kubectl --namespace development port-forward consul-vault-1-5f6d 1337:8500
+#
+# Then open http://127.0.0.1:1337/ui/dc1/services in your web browser.
+#
+#  - name: 8500-to-8500-tcp
+#    port: 8500
+#    protocol: TCP
+#    targetPort: 8500
+#
   selector:
     app: consul-vault-1
   sessionAffinity: None
